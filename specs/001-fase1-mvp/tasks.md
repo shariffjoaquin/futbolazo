@@ -67,8 +67,8 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
 
 ## Publicación
 - [ ] T30 **Repo y despliegue en Vercel**
-  - [ ] T30.1 `git init` y primer commit
-  - [ ] T30.2 Repo en GitHub
+  - [x] T30.1 `git init` y primer commit
+  - [x] T30.2 Repo en GitHub (`shariffjoaquin/futbolazo`)
   - [ ] T30.3 Conectar a Vercel y desplegar
   - [ ] T30.4 Variables de entorno de Supabase en Vercel
   - [ ] T30.5 Dominio (opcional)
