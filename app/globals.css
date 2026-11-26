@@ -63,6 +63,17 @@
   --font-heading: var(--font-display);
   --font-display: var(--font-display);
 
+  --animate-flag-wave: flag-wave 2.4s ease-in-out infinite;
+  @keyframes flag-wave {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(-9deg);
+    }
+  }
+
   --color-brand-red: var(--brand-red);
   --color-brand-red-strong: var(--brand-red-strong);
   --color-brand-white: var(--brand-white);

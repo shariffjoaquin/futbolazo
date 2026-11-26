@@ -116,6 +116,9 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
   - El panel final aparece con fundido y escala.
 - **Confeti** con `canvas-confetti` al ganar, en rojo, blanco, verde y amarillo.
 - **Derrota con humor**: frases cortas al azar ("Te faltó el último pase", etc.).
+- **Adorno de la tarjeta final**: córner de cancha visto desde arriba (líneas de banda, arco de esquina
+  y banderín rojo que se mece) con un brillo de reflector, en SVG propio. Con movimiento reducido el
+  banderín queda quieto.
 - **Pantalla final**: grilla de emojis del resultado presentada como "marcador" y botones
   "Compartir" y "Jugar otra vez" de al menos 48 px de alto y a todo el ancho en móvil.
 - **"¿Cómo se juega?"**: botón en la cabecera que abre un diálogo con ejemplos de cada pista.

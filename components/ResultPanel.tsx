@@ -56,13 +56,10 @@ export function ResultPanel({
       transition={{ delay, type: "spring", bounce: 0.35, duration: 0.6 }}
       className="relative overflow-hidden rounded-3xl bg-card p-5 text-center ring-1 ring-white/10"
     >
-      {/* Franja diagonal roja: forma propia, sin escudos. */}
-      <span
-        aria-hidden
-        className={`pointer-events-none absolute -top-10 -right-16 h-40 w-24 rotate-[35deg] ${won ? "bg-brand-red/80" : "bg-white/10"}`}
-      />
+      <CornerFlag won={won} />
       <div className="relative flex flex-col items-center gap-4">
-        <div>
+        {/* Margen lateral en móvil para que el titular no pase por debajo del córner. */}
+        <div className="px-10 sm:px-12">
           <p className="font-display text-5xl leading-none font-extrabold uppercase italic">{headline}</p>
           <p className="mt-2 text-sm text-muted-foreground">{sub}</p>
         </div>
@@ -109,5 +106,47 @@ export function ResultPanel({
         </div>
       </div>
     </motion.section>
+  );
+}
+
+/**
+ * Córner de cancha visto desde arriba: líneas de banda, arco de esquina y banderín,
+ * con un brillo de reflector detrás. Dibujo propio en SVG (sin escudos ni logos).
+ * El vértice queda separado del borde para que la esquina redondeada no lo recorte.
+ */
+function CornerFlag({ won }: { won: boolean }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 120 120"
+      className="pointer-events-none absolute top-0 right-0 size-28 sm:size-32"
+    >
+      <defs>
+        <radialGradient id="corner-glow" cx="100" cy="20" r="70" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="var(--brand-white)" stopOpacity={won ? 0.22 : 0.12} />
+          <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="corner-line-x" x1="100" y1="0" x2="10" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="var(--brand-white)" stopOpacity="0.55" />
+          <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="corner-line-y" x1="0" y1="20" x2="0" y2="115" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="var(--brand-white)" stopOpacity="0.55" />
+          <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <circle cx="100" cy="20" r="70" fill="url(#corner-glow)" />
+      {/* Líneas de banda y de fondo */}
+      <path d="M10 20H100" stroke="url(#corner-line-x)" strokeWidth="2" />
+      <path d="M100 20V115" stroke="url(#corner-line-y)" strokeWidth="2" />
+      {/* Arco de esquina */}
+      <path d="M70 20A30 30 0 0 0 100 50" fill="none" stroke="var(--brand-white)" strokeOpacity="0.5" strokeWidth="2" />
+      {/* Banderín rojo con franja blanca: se mece suave; quieto con movimiento reducido */}
+      <g className="origin-[100px_20px] motion-safe:animate-flag-wave">
+        <path d="M100 20L76 25L86 41Z" fill="var(--brand-red)" />
+        <path d="M100 20L88 22.5L93 30.5Z" fill="var(--brand-white)" />
+      </g>
+      <circle cx="100" cy="20" r="3.5" fill="var(--brand-white)" />
+    </svg>
   );
 }
