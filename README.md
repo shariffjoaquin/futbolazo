@@ -7,9 +7,12 @@ npm install
 npm run dev      # http://localhost:3000
 npm test         # tests de Vitest
 npm run build
+npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2026.csv)
 ```
 
-- `data/players.ts` — jugadores ficticios de prueba
+- `data/raw/liga1-2026.csv` — jugadores reales de la Liga 1 (fuente)
+- `data/players.ts` — generado por el importador; no editar a mano
+- `lib/importPlayers.ts` + `scripts/import-players.ts` — importador con validación todo o nada
 - `lib/random.ts` — sorteo al azar sin repetir los últimos 10
 - `lib/game.ts` — empezar partida nueva o retomar la guardada
 - `lib/compare.ts` — comparación intento vs objetivo

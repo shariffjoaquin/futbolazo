@@ -12,10 +12,13 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
 - [x] T05 Tipo `Player` (id, nombre, club, nacionalidad, posición, fecha de nacimiento, dorsal, pie)
 - [x] T06 Lista de 10 jugadores ficticios de prueba en `data/players.ts`
 - [ ] T07 **Datos reales de Liga 1** (temporada vigente)
-  - [ ] T07.1 Armar el CSV con el formato de `data-model.md` §3.1
-  - [ ] T07.2 Normalizar nombres de clubes y países
-  - [ ] T07.3 Script CSV → `data/players.ts` con validación
-  - [ ] T07.4 Revisar que los tests sigan pasando con la lista real (`share.test.ts` usa los dos primeros jugadores)
+  - [x] T07.1 Armar el CSV con el formato de `data-model.md` §3.1 (`data/raw/liga1-2026.csv`, 65 jugadores)
+  - [x] T07.2 Normalizar nombres de clubes y países (lista cerrada de 13 países)
+  - [x] T07.3 Importador CSV → `data/players.ts` con validación todo o nada (`npm run import:players`)
+  - [x] T07.4 Revisar que los tests sigan pasando con la lista real, sin depender de cuántos jugadores hay
+  - [x] T07.5 Tests del importador (válido, pie vacío, posición inválida, dorsal repetido, fecha inválida, comillas)
+  - [x] T07.6 Crédito "Datos de jugadores: Wikipedia (CC BY-SA 4.0) y Wikidata" con enlace a la licencia
+  - [ ] T07.7 Completar a mano los datos sin verificar del CSV: 61 de 65 `pie` sin fuente y 6 fechas que difieren de Wikidata (columnas `verif_*`)
 
 ## Lógica del juego
 - [x] T08 Fecha del día en hora de Lima (`getLimaDateKey`)

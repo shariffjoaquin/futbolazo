@@ -156,8 +156,14 @@ temporada,jugador_id,nombre,club_id,club_nombre,nacionalidad,posicion,fecha_naci
 - `jugador_id`: si se deja vacío, se genera desde `nombre` (minúsculas, sin tildes, con guiones).
   Si el jugador ya existe de otra temporada, **hay que reutilizar su id**.
 - `elegible`: opcional, por defecto `true`.
-- `nacionalidad`: lista cerrada de países en español (Perú, Argentina, Colombia, Uruguay, Venezuela…)
-  para que la comparación exacta funcione.
+- `nacionalidad`: lista cerrada de países en español para que la comparación exacta funcione:
+  Perú, Argentina, Uruguay, Paraguay, Chile, Ecuador, Bolivia, Brasil, Colombia, Venezuela, México,
+  España e Italia. Un país nuevo se agrega primero a esa lista (`lib/importPlayers.ts`).
+- Columnas extra (p. ej. `fuente`, `verificado_en`, `verif_*`, `notas_revision`) se permiten y se ignoran.
+- Campos con comas, comillas o saltos de línea van entre comillas dobles (`""` dentro = una comilla).
+  Se aceptan finales de línea LF o CRLF y BOM UTF-8.
+- Fuentes de los datos: Wikipedia (CC BY-SA 4.0) y Wikidata (CC0). La app muestra el crédito con
+  enlace a la licencia.
 
 ### 3.2 Proceso de importación
 
@@ -175,5 +181,12 @@ temporada,jugador_id,nombre,club_id,club_nombre,nacionalidad,posicion,fecha_naci
 
 ### 3.3 Mientras no haya Supabase
 
-El mismo CSV se puede convertir a `data/players.ts` con un script, para usar datos reales desde ya
-con el mismo formato que después se importará a Supabase.
+El mismo CSV se convierte a `data/players.ts` con `npm run import:players [ruta.csv]`
+(por defecto `data/raw/liga1-2026.csv`). Lógica pura en `lib/importPlayers.ts`
+(`parseCsv`, `validateRows`, `renderPlayersTs`) y script en `scripts/import-players.ts`.
+
+- Valida todo el archivo (paso 1 de §3.2). Si hay errores los lista como
+  `Fila N (Nombre): mensaje`, no escribe nada y termina con código 1. La fila 1 es el encabezado.
+- Si todo está bien, sobrescribe `data/players.ts` solo con las filas `elegible=true`,
+  ordenadas por club y dorsal. `club_nombre` → `club`, `fecha_nacimiento` → `fechaNacimiento`.
+- El archivo generado lleva el aviso "Generado por… No editar a mano" y el crédito de las fuentes.

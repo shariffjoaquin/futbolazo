@@ -22,6 +22,18 @@ export default function Home() {
         </p>
       </header>
       <GameLoader />
+      <footer className="mt-auto pt-4 text-center text-xs text-muted-foreground">
+        Datos de jugadores: Wikipedia (
+        <a
+          href="https://creativecommons.org/licenses/by-sa/4.0/deed.es"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          CC BY-SA 4.0
+        </a>
+        ) y Wikidata
+      </footer>
     </main>
   );
 }
