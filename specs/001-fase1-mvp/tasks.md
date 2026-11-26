@@ -38,11 +38,18 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
 - [x] T20 Leyenda de colores y flechas
 - [x] T21 Carga solo en el cliente (`GameLoader` con `ssr: false`)
 - [x] T35 Botón "Jugar otra vez" al terminar; contador "Intento N de 6" sin número de puzzle
-- [ ] T22 **Rediseño visual**
-  - [ ] T22.1 Definir identidad (paleta, tipografía, logo)
-  - [ ] T22.2 Escudos de clubes / banderas en las celdas
-  - [ ] T22.3 Pantalla de "cómo se juega"
-  - [ ] T22.4 Revisar en celular de 360 px y contraste de colores
+- [x] T22 **Rediseño visual "noche de estadio"** (tanda 3, ver `plan.md` §4)
+  - [x] T22.1 Paleta como variables CSS (fondo césped, acento rojo/blanco, pistas verde/amarillo)
+  - [x] T22.2 Fuentes con `next/font`: Barlow Condensed + Inter
+  - [x] T22.3 shadcn/ui (Button, Dialog, Command) e íconos Lucide
+  - [x] T22.4 Animaciones con Motion: volteo de celdas, rebote de fila nueva, transición del panel final
+  - [x] T22.5 Confeti al ganar y mensaje de derrota con humor
+  - [x] T22.6 Pantalla final con resultado en emojis y botones grandes
+  - [x] T22.7 Diálogo "¿Cómo se juega?" con ejemplos de pistas (se abre solo la primera vez)
+  - [x] T22.8 `prefers-reduced-motion` y contraste AA (mínimo 5,2:1 en texto normal)
+  - [x] T22.9 Sin escudos, logos, fotos ni imágenes oficiales (restricción legal)
+  - [x] T22.10 Probado con Playwright en Chromium emulando 390 px, 360 px y escritorio 1280 px
+  - [ ] T22.11 Revisar en celulares reales (iOS Safari y Android Chrome), incluido el menú nativo de compartir
 
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran

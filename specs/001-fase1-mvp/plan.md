@@ -7,7 +7,10 @@
 | Capa | Ahora (fase 1) | Después |
 |---|---|---|
 | Framework | **Next.js 16.4.6** (App Router, Turbopack) + React 19.3 + TypeScript 5 | igual |
-| Estilos | Tailwind CSS 4.3 (vía loader `@tailwindcss/turbopack`) | rediseño visual pendiente |
+| Estilos | Tailwind CSS 4.3 (vía loader `@tailwindcss/turbopack`) + variables CSS de marca | igual |
+| UI | shadcn/ui (Button, Dialog, Command) + íconos Lucide | igual |
+| Animación | Motion (`motion/react`) + `canvas-confetti` | igual |
+| Fuentes | `next/font/google`: Barlow Condensed (títulos y datos) + Inter (texto) | igual |
 | Datos de jugadores | Array estático en `data/players.ts` (10 jugadores ficticios) | **Supabase** (Postgres), cargado desde CSV |
 | Estado del usuario | `localStorage`: partida en curso + últimos 10 sorteados | sigue en `localStorage` (no hay login en fase 1) |
 | Tests | Vitest 3.2 (`npm test`) | igual |
@@ -89,12 +92,45 @@ futbolazo/
 14. **Textos de la interfaz en español** y `lang="es"`.
 15. **Sin dependencias de runtime** aparte de Next y React.
 
-## 4. Plan para lo pendiente
+## 4. Diseño visual (tanda 3)
+
+Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del juego ni los tests.
+
+- **Colores como variables CSS** en `app/globals.css` (`:root`), expuestas a Tailwind con `@theme`:
+  - Fondo: casi negro verdoso con un degradado sutil verde césped y un halo de "reflector" arriba.
+  - Acento de marca: **rojo y blanco** (guiño a Perú): título, botón principal, franja.
+  - Pistas: **verde** = correcto, **amarillo** = cerca, gris pizarra = no. Texto oscuro sobre verde y
+    amarillo para que el contraste sea AA.
+  - Los nombres de shadcn (`--background`, `--primary`, etc.) apuntan a estas variables.
+- **Tipografía** con `next/font/google`: **Barlow Condensed** (600–800) para el título, las cifras de
+  las celdas y los botones; **Inter** para el texto. Se eligió Barlow Condensed sobre Bebas Neue porque
+  tiene minúsculas y varios pesos, y se lee mejor en celdas pequeñas.
+- **Componentes shadcn/ui** en `components/ui/`: `Button`, `Dialog` (¿Cómo se juega?) y `Command`
+  (buscador con `cmdk`). El filtrado sigue siendo el nuestro (sin tildes ni mayúsculas): `Command`
+  usa `shouldFilter={false}` y solo se encarga del teclado y la accesibilidad.
+- **Íconos** con `lucide-react`.
+- **Animaciones** con Motion:
+  - La fila nueva entra con un rebote pequeño (spring).
+  - Sus 6 celdas se voltean una a una (giro en X, ~0,12 s de desfase entre celdas).
+  - Las filas ya reveladas (p. ej. al recargar) se muestran sin animar.
+  - El panel final aparece con fundido y escala.
+- **Confeti** con `canvas-confetti` al ganar, en rojo, blanco, verde y amarillo.
+- **Derrota con humor**: frases cortas al azar ("Te faltó el último pase", etc.).
+- **Pantalla final**: grilla de emojis del resultado presentada como "marcador" y botones
+  "Compartir" y "Jugar otra vez" de al menos 48 px de alto y a todo el ancho en móvil.
+- **"¿Cómo se juega?"**: botón en la cabecera que abre un diálogo con ejemplos de cada pista.
+  Se abre solo la primera vez que se visita (se recuerda en `localStorage`, `futbolazo:v2:visto-ayuda`).
+- **Movimiento reducido**: con `prefers-reduced-motion` no hay volteo, rebote ni confeti
+  (`MotionConfig reducedMotion="user"` y comprobación antes del confeti).
+- **Restricción legal**: **sin escudos, logos, fotos ni imágenes oficiales** de clubes o jugadores.
+  Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
+
+## 5. Plan para lo pendiente
 
 1. **Datos reales de Liga 1**: reemplazar los jugadores ficticios por la plantilla real de la
    temporada vigente, todavía en `data/players.ts`, generado desde el CSV definido en `data-model.md`.
    Con más de 10 jugadores, la exclusión de recientes pasa a ser de 10 completos.
-2. **Rediseño visual**: identidad propia (colores, tipografía, escudos), sin cambiar la mecánica.
+2. **Diseño visual**: hecho en la tanda 3 (ver §4); falta revisión en dispositivos reales.
 3. **Supabase**: crear las tablas de `data-model.md`, script de importación del CSV y lectura de
    jugadores desde la app. El sorteo sigue en el cliente y el estado sigue en `localStorage`.
 4. **Repo y Vercel**: inicializar Git, subir a GitHub, conectar a Vercel, configurar variables de

@@ -4,6 +4,7 @@ import { MAX_GUESSES } from "./share";
 
 const GAME_KEY = "futbolazo:v2:partida";
 const RECENT_KEY = "futbolazo:v2:recientes";
+const HELP_KEY = "futbolazo:v2:visto-ayuda";
 /** Claves del modo diario anterior (una por fecha). */
 const LEGACY_PREFIX = "futbolazo:v1:";
 
@@ -67,4 +68,13 @@ export function loadRecent(): string[] {
 
 export function saveRecent(ids: string[]): void {
   write(RECENT_KEY, ids.slice(-RECENT_LIMIT));
+}
+
+/** Si ya se mostró "¿Cómo se juega?" (se abre sola solo la primera vez). */
+export function loadHelpSeen(): boolean {
+  return read(HELP_KEY) === true;
+}
+
+export function saveHelpSeen(): void {
+  write(HELP_KEY, true);
 }

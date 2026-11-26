@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerById, players } from "../data/players";
 import { resumeOrStartGame, startNewGame } from "./game";
-import { loadGame, loadRecent, saveGame, saveRecent } from "./storage";
+import { loadGame, loadHelpSeen, loadRecent, saveGame, saveHelpSeen, saveRecent } from "./storage";
 
 /** localStorage en memoria (los tests corren en Node). */
 function memoryStorage(): Storage {
@@ -62,6 +62,12 @@ describe("storage", () => {
     expect(localStorage.getItem("futbolazo:v1:2026-11-25")).toBeNull();
   });
 
+  it("recuerda si ya se vio la ayuda", () => {
+    expect(loadHelpSeen()).toBe(false);
+    saveHelpSeen();
+    expect(loadHelpSeen()).toBe(true);
+  });
+
   it("con localStorage bloqueado no rompe", () => {
     vi.stubGlobal("localStorage", {
       get length(): number {
@@ -78,6 +84,8 @@ describe("storage", () => {
     expect(loadRecent()).toEqual([]);
     expect(() => saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26" })).not.toThrow();
     expect(() => saveRecent([a.id])).not.toThrow();
+    expect(loadHelpSeen()).toBe(false);
+    expect(() => saveHelpSeen()).not.toThrow();
     expect(players).toContainEqual(getPlayerById(resumeOrStartGame().targetId));
   });
 });

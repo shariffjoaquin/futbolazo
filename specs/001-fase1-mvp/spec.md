@@ -56,7 +56,7 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
 | **Posición** | misma posición | posición vecina en el orden POR → DEF → MED → DEL | a dos o más pasos | — |
 | **Edad** | misma edad | diferencia ≤ 2 años | diferencia ≥ 3 | ↑ / ↓ |
 | **Dorsal** | mismo número | diferencia ≤ 3 | diferencia ≥ 4 | ↑ / ↓ |
-| **Pie hábil** | mismo pie (Derecho, Izquierdo, Ambos) | — | otro | — |
+| **Pie hábil** | mismo pie (se muestra Diestro, Zurdo o Ambos) | — | otro | — |
 
 - **Flechas**: solo en Edad y Dorsal cuando no son iguales. ↑ significa que el jugador secreto
   tiene **más** (es mayor o lleva un número más alto); ↓ significa que tiene **menos**.
@@ -67,9 +67,11 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
 
 ### 2.5 Fin de partida
 
-- **Gana**: "¡Golazo! Lo adivinaste en N/6".
-- **Pierde**: "¡Se acabaron los intentos!".
-- En ambos casos se revela el jugador: nombre, club, país, posición y dorsal.
+- **Gana**: "¡Golazo!" + "Lo adivinaste en N/6", con confeti (salvo con movimiento reducido).
+- **Pierde**: tono divertido, no triste: una frase de cancha (p. ej. "¡Uy, al palo!", "Te faltó el
+  último pase") + "Se acabaron los intentos… pero la revancha es ya." La frase es fija por partida.
+- En ambos casos se revela el jugador: nombre, club, país, posición y dorsal, y se muestra la
+  grilla de emojis del resultado.
 - Aparecen dos botones: **Compartir** y **"Jugar otra vez"**. "Jugar otra vez" empieza al instante
   una partida nueva con otro jugador al azar (según 2.1) y vacía el tablero.
 

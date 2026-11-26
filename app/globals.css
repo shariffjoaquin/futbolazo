@@ -1,5 +1,132 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Paleta "noche de estadio". Cambia aquí los colores de marca y de pistas;
+ * los tokens de shadcn (más abajo) se derivan de estos.
+ */
+:root {
+  /* Césped y noche */
+  --stadium-night: #050d09;
+  --turf-dark: #0a2416;
+  --turf: #12432a;
+  --turf-line: rgb(255 255 255 / 0.025);
+  --floodlight: rgb(236 255 244 / 0.11);
+
+  /* Marca: rojo y blanco */
+  --brand-red: #d91023;
+  --brand-red-strong: #b30d1d;
+  --brand-white: #ffffff;
+
+  /* Pistas */
+  --hint-correct: #2fbf5b;
+  --hint-correct-ink: #04210f;
+  --hint-close: #f5c518;
+  --hint-close-ink: #2a2100;
+  --hint-wrong: #2a3631;
+  --hint-wrong-ink: #e7efe9;
+
+  /* Superficies y texto */
+  --surface: #0d1c15;
+  --surface-raised: #13261d;
+  --ink: #f3f8f4;
+  --ink-muted: #a9c2b4;
+  --line: rgb(255 255 255 / 0.1);
+
+  /* Tokens de shadcn/ui */
+  --background: var(--stadium-night);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand-red);
+  --primary-foreground: var(--brand-white);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--ink);
+  --muted: rgb(255 255 255 / 0.08);
+  --muted-foreground: var(--ink-muted);
+  --accent: rgb(255 255 255 / 0.1);
+  --accent-foreground: var(--ink);
+  --destructive: var(--brand-red);
+  --border: var(--line);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: rgb(255 255 255 / 0.7);
+  --radius: 0.875rem;
+}
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
+
+  --color-brand-red: var(--brand-red);
+  --color-brand-red-strong: var(--brand-red-strong);
+  --color-brand-white: var(--brand-white);
+  --color-turf: var(--turf);
+  --color-hint-correct: var(--hint-correct);
+  --color-hint-correct-ink: var(--hint-correct-ink);
+  --color-hint-close: var(--hint-close);
+  --color-hint-close-ink: var(--hint-close-ink);
+  --color-hint-wrong: var(--hint-wrong);
+  --color-hint-wrong-ink: var(--hint-wrong-ink);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+  }
+  body {
+    @apply text-foreground;
+    background-color: var(--stadium-night);
+  }
+  /* Fondo fijo: halo de reflector + franjas de césped cortado + degradado verde a noche. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 55% at 50% -10%, var(--floodlight), transparent 60%),
+      repeating-linear-gradient(90deg, var(--turf-line) 0 64px, transparent 64px 128px),
+      linear-gradient(180deg, var(--turf-dark) 0%, var(--stadium-night) 55%, var(--turf-dark) 100%);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
