@@ -56,9 +56,9 @@ export function ResultPanel({
       transition={{ delay, type: "spring", bounce: 0.35, duration: 0.6 }}
       className="relative overflow-hidden rounded-3xl bg-card p-5 text-center ring-1 ring-white/10"
     >
-      <CornerFlag won={won} />
+      <CornerSash won={won} />
       <div className="relative flex flex-col items-center gap-4">
-        {/* Margen lateral en móvil para que el titular no pase por debajo del córner. */}
+        {/* Margen lateral para que el titular no pase por debajo de la franja. */}
         <div className="px-10 sm:px-12">
           <p className="font-display text-5xl leading-none font-extrabold uppercase italic">{headline}</p>
           <p className="mt-2 text-sm text-muted-foreground">{sub}</p>
@@ -109,44 +109,42 @@ export function ResultPanel({
   );
 }
 
+/** Polígono de una franja diagonal entre las rectas x − y = c1 y x − y = c2, recortada a la caja de 120 × 120. */
+const stripe = (c1: number, c2: number) => `${c1},0 ${c2},0 120,${120 - c2} 120,${120 - c1}`;
+
 /**
- * Córner de cancha visto desde arriba: líneas de banda, arco de esquina y banderín,
- * con un brillo de reflector detrás. Dibujo propio en SVG (sin escudos ni logos).
- * El vértice queda separado del borde para que la esquina redondeada no lo recorte.
+ * Franja diagonal rojo-blanco-rojo que cruza la esquina, como la banda de una camiseta.
+ * Dibujo propio en SVG (sin escudos ni logos). Un brillo de reflector la recorre de vez en
+ * cuando; con movimiento reducido queda quieta. Solo ocupa la esquina, fuera del texto.
  */
-function CornerFlag({ won }: { won: boolean }) {
+function CornerSash({ won }: { won: boolean }) {
   return (
     <svg
       aria-hidden
       viewBox="0 0 120 120"
-      className="pointer-events-none absolute top-0 right-0 size-28 sm:size-32"
+      className={`pointer-events-none absolute top-0 right-0 size-28 sm:size-32 ${won ? "" : "opacity-70"}`}
     >
       <defs>
-        <radialGradient id="corner-glow" cx="100" cy="20" r="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="var(--brand-white)" stopOpacity={won ? 0.22 : 0.12} />
-          <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="corner-line-x" x1="100" y1="0" x2="10" y2="0" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="var(--brand-white)" stopOpacity="0.55" />
-          <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="corner-line-y" x1="0" y1="20" x2="0" y2="115" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="var(--brand-white)" stopOpacity="0.55" />
+        <clipPath id="sash-clip">
+          <polygon points={stripe(42, 84)} />
+        </clipPath>
+        <linearGradient id="sash-sheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="var(--brand-white)" stopOpacity="0" />
+          <stop offset="0.5" stopColor="var(--brand-white)" stopOpacity="0.45" />
           <stop offset="1" stopColor="var(--brand-white)" stopOpacity="0" />
         </linearGradient>
       </defs>
-      <circle cx="100" cy="20" r="70" fill="url(#corner-glow)" />
-      {/* Líneas de banda y de fondo */}
-      <path d="M10 20H100" stroke="url(#corner-line-x)" strokeWidth="2" />
-      <path d="M100 20V115" stroke="url(#corner-line-y)" strokeWidth="2" />
-      {/* Arco de esquina */}
-      <path d="M70 20A30 30 0 0 0 100 50" fill="none" stroke="var(--brand-white)" strokeOpacity="0.5" strokeWidth="2" />
-      {/* Banderín rojo con franja blanca: se mece suave; quieto con movimiento reducido */}
-      <g className="origin-[100px_20px] motion-safe:animate-flag-wave">
-        <path d="M100 20L76 25L86 41Z" fill="var(--brand-red)" />
-        <path d="M100 20L88 22.5L93 30.5Z" fill="var(--brand-white)" />
+      {/* Sombra suave bajo la franja */}
+      <polygon points={stripe(38, 42)} fill="black" fillOpacity="0.25" />
+      <polygon points={stripe(42, 56)} fill="var(--brand-red)" />
+      <polygon points={stripe(56, 70)} fill="var(--brand-white)" />
+      <polygon points={stripe(70, 84)} fill="var(--brand-red)" />
+      {/* Brillo: banda vertical en un marco girado 45°, así se desliza a lo largo de la franja */}
+      <g clipPath="url(#sash-clip)">
+        <g transform="rotate(45 60 60)">
+          <rect x="0" y="-60" width="24" height="240" fill="url(#sash-sheen)" className="motion-safe:animate-sash-sheen" />
+        </g>
       </g>
-      <circle cx="100" cy="20" r="3.5" fill="var(--brand-white)" />
     </svg>
   );
 }

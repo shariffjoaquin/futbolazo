@@ -63,14 +63,14 @@
   --font-heading: var(--font-display);
   --font-display: var(--font-display);
 
-  --animate-flag-wave: flag-wave 2.4s ease-in-out infinite;
-  @keyframes flag-wave {
-    0%,
-    100% {
-      transform: rotate(0deg);
+  --animate-sash-sheen: sash-sheen 4.5s ease-in-out 1.2s infinite;
+  @keyframes sash-sheen {
+    0% {
+      transform: translateX(0);
     }
-    50% {
-      transform: rotate(-9deg);
+    45%,
+    100% {
+      transform: translateX(110px);
     }
   }
 
