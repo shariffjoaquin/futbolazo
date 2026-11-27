@@ -10,7 +10,7 @@ export function startNewGame(rand: () => number = Math.random, date: Date = new 
   const recent = loadRecent();
   const target = pickRandomPlayer(recent, undefined, rand);
   saveRecent(addRecent(recent, target.id));
-  const game: SavedGame = { targetId: target.id, guesses: [], fecha: getLimaDateKey(date) };
+  const game: SavedGame = { targetId: target.id, guesses: [], fecha: getLimaDateKey(date), hints: [] };
   saveGame(game);
   return game;
 }

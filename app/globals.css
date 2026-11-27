@@ -28,6 +28,8 @@
   --hint-close-ink: #2a2100;
   --hint-wrong: #2a3631;
   --hint-wrong-ink: #e7efe9;
+  /* Botón de pista: dorado, distinto del amarillo "cerca" */
+  --hint-gold: #e9b949;
 
   /* Superficies y texto */
   --surface: #0d1c15;
@@ -84,6 +86,7 @@
   --color-hint-close-ink: var(--hint-close-ink);
   --color-hint-wrong: var(--hint-wrong);
   --color-hint-wrong-ink: var(--hint-wrong-ink);
+  --color-hint-gold: var(--hint-gold);
 
   --color-ring: var(--ring);
   --color-input: var(--input);

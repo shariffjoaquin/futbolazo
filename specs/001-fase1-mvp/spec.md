@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 2 (partidas ilimitadas al azar en lugar de puzzle diario)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 3 (botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -27,8 +27,8 @@ que se pueda publicar y compartir.
 
 ### 2.2 Partida en curso
 
-- La partida en curso (jugador secreto, intentos hechos y fecha en que empezó) se guarda en
-  `localStorage` después de cada intento.
+- La partida en curso (jugador secreto, intentos hechos, pistas pedidas y fecha en que empezó) se
+  guarda en `localStorage` después de cada intento y de cada pista.
 - **Al recargar la página se sigue en la misma partida**, con los mismos intentos. Si ya había
   terminado, se vuelve a ver el resultado final con sus botones.
 - Una partida nueva solo empieza al abrir el juego por primera vez (o sin partida guardada)
@@ -68,7 +68,36 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
 - Los intentos se muestran del más reciente al más antiguo; los huecos que quedan se ven como filas vacías.
 - Una leyenda bajo el tablero explica colores y flechas.
 
-### 2.5 Fin de partida
+### 2.5 Botón de pista
+
+Ayuda opcional, aparte de las pistas de cada intento (que no cambian).
+
+- **Cuándo aparece**: el botón **"💡 Pista"** aparece después del **2.º intento fallido**
+  (2 intentos que no son el jugador secreto). Antes no se muestra.
+- **Límite**: máximo **2 pistas por partida**. Pedir una pista **no gasta intentos**.
+- **Qué revela**: se sortea al azar una pista entre las que el jugador **aún no descubrió**:
+  - **Grupo principal**: país, club y posición del jugador secreto.
+  - Un atributo ya no está disponible si el jugador **ya lo acertó** (celda verde) en algún intento,
+    o si **ya se dio como pista** antes.
+  - Solo si no queda nada del grupo principal, se sortea del **grupo secundario**: inicial del
+    apellido, pie hábil o rango de edad de 5 años que contiene la edad real (p. ej. "Entre 30 y 34
+    años"; rangos 15–19, 20–24, 25–29…). Con el mismo criterio: el pie y la edad tampoco se dan si ya
+    salieron en verde, y ninguna pista se repite.
+  - **Inicial del apellido**: la de la última palabra del nombre; si va precedida de una partícula
+    (de, del, di, da, la, van…), se toma la partícula ("Matías Di Benedetto" → "D").
+- **Estados del botón**:
+  - Disponible: "💡 Pista" con las que quedan.
+  - Sin pistas: si ya se usaron las 2 (o no queda ninguna por revelar), queda deshabilitado con el
+    texto **"Sin pistas"**.
+  - Partida terminada: queda deshabilitado.
+- **Cómo se muestra**: cada pista es una **fila especial** sobre el tablero, con borde dorado e
+  ícono 💡, claramente distinta de una fila de intento: "Pista 1 · País: [bandera] Argentina".
+  El país lleva su bandera. Los lectores de pantalla anuncian la pista nueva con un texto completo
+  (p. ej. "Pista 1: el país es Argentina").
+- **Persistencia**: las pistas pedidas se guardan con la partida en curso y sobreviven a recargas.
+  Una partida nueva empieza sin pistas.
+
+### 2.6 Fin de partida
 
 - **Gana**: "¡Golazo!" + "Lo adivinaste en N/6", con confeti (salvo con movimiento reducido).
 - **Pierde**: tono divertido, no triste: una frase de cancha (p. ej. "¡Uy, al palo!", "Te faltó el
@@ -76,14 +105,14 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
 - En ambos casos se revela el jugador: nombre, club, país, posición y dorsal, y se muestra la
   grilla de emojis del resultado.
 - Aparecen dos botones: **Compartir** y **"Jugar otra vez"**. "Jugar otra vez" empieza al instante
-  una partida nueva con otro jugador al azar (según 2.1) y vacía el tablero.
+  una partida nueva con otro jugador al azar (según 2.1) y vacía el tablero y las pistas.
 
-### 2.6 Resultado para compartir
+### 2.7 Resultado para compartir
 
 Texto con este formato:
 
 ```
-Futbolazo 🇵🇪 <N>/6      (o X/6 si perdió)
+Futbolazo 🇵🇪 <N>/6      (o X/6 si perdió; con " 💡<pistas>" al final si usó pistas)
 
 🟩🟨⬜⬜🟩🟩
 🟩🟩🟩🟩🟩🟩
@@ -92,16 +121,19 @@ Futbolazo 🇵🇪 <N>/6      (o X/6 si perdió)
 ```
 
 - **Sin número de puzzle.**
+- **Pistas**: solo si se usaron, el título termina con 💡 y el número: `Futbolazo 🇵🇪 4/6 💡1`.
+  Sin pistas queda igual que antes.
 - Una fila por intento, en orden cronológico, con un emoji por pista en el orden
   Club, País, Posición, Edad, Dorsal, Pie. 🟩 correcto, 🟨 cerca, ⬜ no.
 - No incluye nombres ni flechas: no revela al jugador.
 - Se usa el menú nativo de compartir (`navigator.share`) cuando existe; si no existe o falla,
   se copia al portapapeles y se muestra "¡Copiado al portapapeles!". Si el usuario cancela el menú, no pasa nada.
 
-### 2.7 Sin login y persistencia
+### 2.8 Sin login y persistencia
 
 - **No hay cuentas ni login.** Todo ocurre en el navegador.
-- En `localStorage` se guardan dos cosas: la partida en curso y los últimos 10 jugadores sorteados.
+- En `localStorage` se guardan: la partida en curso (con sus pistas), los últimos 10 jugadores
+  sorteados y si ya se vio la ayuda.
 - Si `localStorage` no está disponible (p. ej. modo privado), se juega igual, sin guardar:
   al recargar empieza una partida nueva y la exclusión de repetidos no se recuerda.
 - Datos guardados corruptos o con jugadores que ya no existen se ignoran sin romper el juego
@@ -117,7 +149,7 @@ Futbolazo 🇵🇪 <N>/6      (o X/6 si perdió)
 - Rankings, ligas entre amigos o cualquier competencia.
 - Abandonar o reiniciar una partida a medias.
 - Otras ligas, selecciones o jugadores históricos.
-- Pistas extra (foto, silueta, estadísticas, "comprar" pistas).
+- Otros tipos de pistas extra (foto, silueta, estadísticas) o "comprar" pistas.
 - Panel de administración web; los datos se cargan por CSV (ver `data-model.md`).
 - Notificaciones push, PWA instalable o app nativa.
 - Monetización (anuncios, suscripciones).
@@ -137,6 +169,16 @@ Futbolazo 🇵🇪 <N>/6      (o X/6 si perdió)
 - [ ] CA-06: Al recargar una partida terminada, se ve el resultado final con "Compartir" y "Jugar otra vez".
 - [ ] CA-07: "Jugar otra vez" empieza una partida con 0 intentos y un jugador distinto al anterior.
 - [ ] CA-08: Recargar no empieza una partida nueva ni consume un jugador de la lista de recientes.
+
+**Botón de pista**
+- [ ] CA-26: El botón "💡 Pista" no aparece con 0 o 1 intentos fallidos y aparece desde el 2.º intento fallido.
+- [ ] CA-27: Pedir una pista no cambia el número de intentos.
+- [ ] CA-28: Nunca se da como pista un atributo que ya salió en verde en algún intento, ni se repite una pista.
+- [ ] CA-29: Mientras quede país, club o posición por descubrir, la pista sale de ese grupo; si no, de inicial, pie o rango de edad.
+- [ ] CA-30: Tras 2 pistas el botón queda deshabilitado con "Sin pistas"; al terminar la partida queda deshabilitado.
+- [ ] CA-31: La pista se ve como una fila distinta (borde dorado, 💡), el país con bandera, y se anuncia a lectores de pantalla.
+- [ ] CA-32: Al recargar se ven las mismas pistas; "Jugar otra vez" empieza sin pistas.
+- [ ] CA-33: Compartir agrega " 💡N" al título solo si se usaron pistas.
 
 **Intentos y pistas**
 - [ ] CA-09: Solo se pueden elegir jugadores de la lista; la búsqueda funciona sin tildes ni mayúsculas ("rondon" encuentra a "Yeferson Rondón").

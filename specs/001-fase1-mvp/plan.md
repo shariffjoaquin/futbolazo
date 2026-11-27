@@ -78,7 +78,8 @@ futbolazo/
 9. **Solo se aceptan jugadores de la lista** (autocompletado), así cada intento se puede comparar
    y no hay que manejar errores de tipeo.
 10. **`localStorage` con formato `v2`**:
-    - `futbolazo:v2:partida` → `{ "targetId": string, "guesses": string[], "fecha": "YYYY-MM-DD" }`
+    - `futbolazo:v2:partida` → `{ "targetId": string, "guesses": string[], "fecha": "YYYY-MM-DD", "hints": HintType[] }`
+      (`hints` es opcional al leer: una partida guardada antes del botón de pista se carga con `[]`)
     - `futbolazo:v2:recientes` → `string[]` (máx. 10, el más reciente al final)
     - Al cargar se descartan ids desconocidos, duplicados y lo que pase de 6 intentos. Si el
       `targetId` no existe o la fecha no es válida, la partida se descarta.
@@ -131,6 +132,17 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
   emblemas simplificados a una figura geométrica (círculo, estrella, rectángulo). Los datos de cada
   bandera son una lista de figuras sin React, así un test comprueba que no falte ninguna. Sin bandera
   definida, la celda muestra solo el texto.
+- **Botón de pista** (`lib/hints.ts` + `components/HintPanel.tsx`):
+  - Lógica pura y testeable: `availableHints` (qué queda por revelar según intentos en verde y pistas
+    ya dadas, grupo principal primero), `pickHint` (sorteo con `rand` inyectable, `null` si no
+    corresponde), `hintButtonState` (oculto / disponible / sin pistas / terminada) y `describeHint`
+    (texto visible y texto para lectores de pantalla).
+  - Solo se guarda el **tipo** de cada pista (`"pais" | "club" | "posicion" | "inicial" | "pie" | "edad"`);
+    el valor se deriva del jugador secreto, así no hay datos duplicados.
+  - Las filas de pista van sobre el tablero, con borde dorado (`--hint-gold`) e ícono 💡, en una lista
+    con `aria-live="polite"`. Entran con el mismo rebote que las filas de intento (sin animación con
+    movimiento reducido).
+  - Las etiquetas de posición y pie pasan a `lib/labels.ts` para compartirlas entre celdas y pistas.
 - **Restricción legal**: **sin escudos, logos, fotos ni imágenes oficiales** de clubes o jugadores.
   Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
 

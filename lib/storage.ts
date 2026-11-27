@@ -1,4 +1,5 @@
 import { getPlayerById } from "../data/players";
+import { HINT_TYPES, MAX_HINTS, type HintType } from "./hints";
 import { RECENT_LIMIT } from "./random";
 import { MAX_GUESSES } from "./share";
 
@@ -14,6 +15,8 @@ export interface SavedGame {
   guesses: string[];
   /** Fecha de Lima (YYYY-MM-DD) en que empezó la partida; las edades se calculan a esa fecha. */
   fecha: string;
+  /** Pistas pedidas con el botón de pista, en orden (máx. 2). */
+  hints: HintType[];
 }
 
 function read(key: string): unknown {
@@ -46,7 +49,11 @@ export function loadGame(): SavedGame | null {
   const { targetId, fecha } = data;
   if (typeof targetId !== "string" || !getPlayerById(targetId)) return null;
   if (typeof fecha !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return null;
-  return { targetId, fecha, guesses: validIds(data.guesses).slice(0, MAX_GUESSES) };
+  // Las partidas guardadas antes del botón de pista no traen `hints`: se cargan sin pistas.
+  const hints = Array.isArray(data.hints)
+    ? [...new Set(data.hints.filter((h): h is HintType => HINT_TYPES.includes(h as HintType)))].slice(0, MAX_HINTS)
+    : [];
+  return { targetId, fecha, guesses: validIds(data.guesses).slice(0, MAX_GUESSES), hints };
 }
 
 export function saveGame(game: SavedGame): void {

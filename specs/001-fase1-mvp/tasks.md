@@ -61,6 +61,15 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T39.4 Test: cada país de la lista tiene bandera
   - [x] T39.5 Probado en navegador a 360 px y 1280 px
 
+- [x] T40 **Botón de pista**
+  - [x] T40.1 Lógica pura en `lib/hints.ts` (disponibles, sorteo con azar inyectable, estado del botón, texto)
+  - [x] T40.2 Pistas guardadas con la partida en curso (`hints`), reinicio en partida nueva
+  - [x] T40.3 Botón "💡 Pista" (desde el 2.º intento fallido, máx. 2, "Sin pistas", deshabilitado al terminar)
+  - [x] T40.4 Fila especial de pista (borde dorado, 💡, bandera para país, texto accesible)
+  - [x] T40.5 Compartir con " 💡N" solo si se usaron pistas
+  - [x] T40.6 Tests: atributo acertado, grupo secundario, máximo 2, aparición del botón, recarga, compartir
+  - [x] T40.7 Probado en navegador a 360 px y 1280 px
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado

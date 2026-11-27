@@ -35,7 +35,7 @@ Limitaciones:
 
 | Clave | Valor | Notas |
 |---|---|---|
-| `futbolazo:v2:partida` | `{ "targetId": "diego-quispe", "guesses": ["luis-arana"], "fecha": "2026-11-26" }` | partida en curso o recién terminada; `fecha` = día de Lima en que empezó, para calcular edades |
+| `futbolazo:v2:partida` | `{ "targetId": "diego-quispe", "guesses": ["luis-arana"], "fecha": "2026-11-26", "hints": ["club"] }` | partida en curso o recién terminada; `fecha` = día de Lima en que empezó, para calcular edades; `hints` = tipos de pista pedidos, en orden (máx. 2) |
 | `futbolazo:v2:recientes` | `["renzo-carrillo", "diego-quispe"]` | últimos 10 jugadores sorteados, el más reciente al final |
 | `futbolazo:v2:visto-ayuda` | `true` | ya se mostró "¿Cómo se juega?"; si falta, el diálogo se abre solo |
 | `futbolazo:v1:<YYYY-MM-DD>` | `{ "guesses": [...] }` | **obsoleta** (modo diario anterior); se borra al guardar |

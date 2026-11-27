@@ -2,9 +2,10 @@
 
 import { CircleCheck } from "lucide-react";
 import { motion } from "motion/react";
-import { COLUMNS, FLIP_STAGGER, GRID_COLS, HintCell, PIE_LABEL } from "@/components/HintCell";
+import { COLUMNS, FLIP_STAGGER, GRID_COLS, HintCell } from "@/components/HintCell";
 import type { Player } from "@/data/players";
 import { ageOn, type CompareResult } from "@/lib/compare";
+import { PIE_LABEL } from "@/lib/labels";
 
 export function GuessRow({
   index,

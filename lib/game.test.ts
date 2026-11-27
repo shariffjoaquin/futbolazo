@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerById, players } from "../data/players";
 import { resumeOrStartGame, startNewGame } from "./game";
+import type { HintType } from "./hints";
 import { loadGame, loadHelpSeen, loadRecent, saveGame, saveHelpSeen, saveRecent } from "./storage";
 
 /** localStorage en memoria (los tests corren en Node). */
@@ -26,8 +27,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("storage", () => {
   it("guarda y recupera la partida en curso", () => {
-    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26" });
-    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26" });
+    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"] });
+    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"] });
   });
 
   it("sin partida guardada devuelve null", () => {
@@ -58,8 +59,19 @@ describe("storage", () => {
 
   it("borra el progreso viejo del modo diario al guardar", () => {
     localStorage.setItem("futbolazo:v1:2026-11-25", JSON.stringify({ guesses: [a.id] }));
-    saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26" });
+    saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [] });
     expect(localStorage.getItem("futbolazo:v1:2026-11-25")).toBeNull();
+  });
+
+  it("una partida guardada antes del botón de pista se carga sin pistas", () => {
+    localStorage.setItem("futbolazo:v2:partida", JSON.stringify({ targetId: a.id, guesses: [b.id], fecha: "2026-11-26" }));
+    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id], fecha: "2026-11-26", hints: [] });
+  });
+
+  it("descarta pistas desconocidas, repetidas o de más", () => {
+    const hints = ["club", "foto", "club", 3, "pais", "edad"];
+    localStorage.setItem("futbolazo:v2:partida", JSON.stringify({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints }));
+    expect(loadGame()?.hints).toEqual(["club", "pais"]);
   });
 
   it("recuerda si ya se vio la ayuda", () => {
@@ -82,7 +94,7 @@ describe("storage", () => {
     });
     expect(loadGame()).toBeNull();
     expect(loadRecent()).toEqual([]);
-    expect(() => saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26" })).not.toThrow();
+    expect(() => saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [] })).not.toThrow();
     expect(() => saveRecent([a.id])).not.toThrow();
     expect(loadHelpSeen()).toBe(false);
     expect(() => saveHelpSeen()).not.toThrow();
@@ -117,8 +129,21 @@ describe("partida en curso", () => {
     expect(loadRecent()).toHaveLength(1);
   });
 
+  it("las pistas pedidas sobreviven a recargar", () => {
+    const game = resumeOrStartGame(() => 0, LIMA_NOON);
+    const conPistas = { ...game, guesses: [b.id, c.id], hints: ["posicion", "club"] as HintType[] };
+    saveGame(conPistas);
+    expect(resumeOrStartGame(() => 0.5, LIMA_NOON)).toEqual(conPistas);
+  });
+
+  it("una partida nueva empieza sin pistas", () => {
+    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["pais"] });
+    expect(startNewGame(() => 0, LIMA_NOON).hints).toEqual([]);
+    expect(loadGame()?.hints).toEqual([]);
+  });
+
   it("una partida terminada también se retoma tal cual", () => {
-    const terminada = { targetId: a.id, guesses: [b.id, a.id], fecha: "2026-11-20" };
+    const terminada = { targetId: a.id, guesses: [b.id, a.id], fecha: "2026-11-20", hints: [] as HintType[] };
     saveGame(terminada);
     expect(resumeOrStartGame()).toEqual(terminada);
   });

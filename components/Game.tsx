@@ -5,12 +5,14 @@ import { Search } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GuessRow } from "@/components/GuessRow";
+import { HintPanel } from "@/components/HintPanel";
 import { COLUMNS, GRID_COLS, REVEAL_SECONDS } from "@/components/HintCell";
 import { ResultPanel } from "@/components/ResultPanel";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { getPlayerById, players, type Player } from "@/data/players";
 import { compare } from "@/lib/compare";
 import { resumeOrStartGame, startNewGame } from "@/lib/game";
+import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { buildShareText, MAX_GUESSES } from "@/lib/share";
 import { saveGame, type SavedGame } from "@/lib/storage";
 
@@ -33,6 +35,8 @@ export default function Game() {
   const [toast, setToast] = useState<string | null>(null);
   // Último intento enviado en esta sesión: solo ese se anima (al recargar, todo aparece quieto).
   const [revealing, setRevealing] = useState<string | null>(null);
+  // Última pista pedida en esta sesión: solo esa entra animada.
+  const [newHint, setNewHint] = useState<HintType | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reduceMotion = useReducedMotion();
 
@@ -44,8 +48,20 @@ export default function Game() {
     const player = getPlayerById(id)!;
     return { player, result: compare(player, target, dateKey) };
   });
+  const results = rows.map((r) => r.result);
   const won = guesses.includes(target.id);
   const over = won || guesses.length >= MAX_GUESSES;
+  const hintState = hintButtonState({
+    failedGuesses: guesses.filter((id) => id !== target.id).length,
+    hintsUsed: game.hints.length,
+    remaining: availableHints(results, game.hints).length,
+    over,
+  });
+  const hintRows = game.hints.map((type) => ({
+    type,
+    text: describeHint(type, target, dateKey),
+    country: type === "pais" ? target.nacionalidad : undefined,
+  }));
   const justEnded = over && revealing !== null && guesses.at(-1) === revealing;
   const animateRows = !reduceMotion;
   const resultDelay = justEnded && animateRows ? REVEAL_SECONDS + 0.15 : 0;
@@ -78,9 +94,20 @@ export default function Game() {
     setOpen(false);
   }
 
+  function requestHint() {
+    if (hintState !== "ready") return;
+    const type = pickHint(results, game.hints);
+    if (!type) return;
+    const next = { ...game, hints: [...game.hints, type] };
+    setGame(next);
+    saveGame(next);
+    setNewHint(type);
+  }
+
   function playAgain() {
     setGame(startNewGame());
     setRevealing(null);
+    setNewHint(null);
     setQuery("");
     setOpen(false);
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
@@ -99,9 +126,10 @@ export default function Game() {
 
   async function share() {
     const text = buildShareText(
-      rows.map((r) => r.result),
+      results,
       won,
       window.location.origin + window.location.pathname,
+      game.hints.length,
     );
     if (navigator.share) {
       try {
@@ -196,7 +224,7 @@ export default function Game() {
               key={game.targetId + game.fecha}
               won={won}
               target={target}
-              results={rows.map((r) => r.result)}
+              results={results}
               gameKey={game.targetId + guesses.join()}
               delay={resultDelay}
               onShare={share}
@@ -204,6 +232,8 @@ export default function Game() {
             />
           )}
         </AnimatePresence>
+
+        <HintPanel state={hintState} hints={hintRows} onRequest={requestHint} animateType={newHint} />
 
         <section aria-label="Intentos" className="flex flex-col gap-2">
           <div

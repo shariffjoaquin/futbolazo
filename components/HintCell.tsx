@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import { Flag } from "@/components/Flag";
 import { getFlag } from "@/lib/flags";
 import { cn } from "@/lib/utils";
-import type { Player } from "@/data/players";
 import type { AttrResult } from "@/lib/compare";
 
 export const STATUS_CLASS: Record<AttrResult["status"], string> = {
@@ -18,16 +17,6 @@ const STATUS_TEXT: Record<AttrResult["status"], string> = {
   close: "cerca",
   wrong: "no",
 };
-
-export const POSITION_LABEL: Record<Player["posicion"], string> = {
-  POR: "Portero",
-  DEF: "Defensa",
-  MED: "Medio",
-  DEL: "Delantero",
-};
-
-/** Etiqueta corta para la celda (el dato sigue siendo D / I / Ambos). */
-export const PIE_LABEL: Record<Player["pie"], string> = { D: "Diestro", I: "Zurdo", Ambos: "Ambos" };
 
 export const COLUMNS = ["Club", "País", "Pos.", "Edad", "Dorsal", "Pie"] as const;
 /** Club lleva nombres más largos, así que su columna es más ancha. */

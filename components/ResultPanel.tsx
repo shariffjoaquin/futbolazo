@@ -2,10 +2,10 @@
 
 import { RotateCcw, Share2 } from "lucide-react";
 import { motion } from "motion/react";
-import { POSITION_LABEL } from "@/components/HintCell";
 import { Button } from "@/components/ui/button";
 import type { Player } from "@/data/players";
 import type { CompareResult } from "@/lib/compare";
+import { POSITION_LABEL } from "@/lib/labels";
 import { ATTRIBUTES, EMOJI, MAX_GUESSES } from "@/lib/share";
 
 const LOSS_LINES = [
