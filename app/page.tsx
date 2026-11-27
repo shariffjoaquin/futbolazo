@@ -1,11 +1,11 @@
-import GameLoader, { HowToPlayLoader } from "@/components/GameLoader";
+import GameLoader, { HowToPlayLoader, SoundToggleLoader } from "@/components/GameLoader";
 
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pt-5 pb-10">
       <header className="flex flex-col items-center gap-1">
         <div className="grid w-full grid-cols-[2.75rem_1fr_2.75rem] items-center">
-          <span aria-hidden />
+          <SoundToggleLoader />
           <h1 className="text-center font-display text-5xl leading-none font-extrabold tracking-tight uppercase italic sm:text-6xl">
             Futbol<span className="text-brand-red">azo</span>
           </h1>

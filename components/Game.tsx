@@ -7,11 +7,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { DifficultyPicker } from "@/components/DifficultyPicker";
 import { GuessRow } from "@/components/GuessRow";
 import { HintPanel } from "@/components/HintPanel";
-import { COLUMNS, GRID_COLS, REVEAL_SECONDS } from "@/components/HintCell";
+import { COLUMNS, FLIP_DURATION, FLIP_STAGGER, GRID_COLS, REVEAL_SECONDS } from "@/components/HintCell";
 import { ResultPanel } from "@/components/ResultPanel";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { getPlayerById, players, type Player } from "@/data/players";
+import { getSoundEngine, getSoundSetting } from "@/lib/audio";
 import { buildInviteText, challengeUrl, encodeChallenge } from "@/lib/challenge";
 import { compare } from "@/lib/compare";
 import { NIVEL_LABEL, type Nivel } from "@/lib/difficulty";
@@ -19,6 +20,7 @@ import { bootGame, resumeOrStartNormal, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { computeScore } from "@/lib/score";
 import { buildShareText, CHALLENGE_LINE, MAX_GUESSES } from "@/lib/share";
+import { feedbackPolicy, planGuess, planHint, type FeedbackPlan } from "@/lib/sounds";
 import { loadNivel, loadStats, recordScore, saveChallenge, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
 
 const INVALID_CHALLENGE = "Ese link de reto no es válido. Juegas una partida normal.";
@@ -119,11 +121,12 @@ export default function Game() {
     const next = { ...game, guesses: [...guesses, player.id] };
     setGame(next);
     persist(next);
+    const result = compare(player, target, dateKey);
+    const ended = result.isCorrect || next.guesses.length >= MAX_GUESSES;
     // El intento que termina la partida es el único que suma a los récords.
-    if (player.id === target.id || next.guesses.length >= MAX_GUESSES) {
-      const finalResults = [...results, compare(player, target, dateKey)];
-      setStats(recordScore(computeScore(finalResults, game.hints.length).total, game.nivel));
-    }
+    if (ended) setStats(recordScore(computeScore([...results, result], game.hints.length).total, game.nivel));
+    const outcome = result.isCorrect ? "ganar" : ended ? "perder" : "fallo";
+    feedback(planGuess(result, outcome, soundPolicy(), animateRows, { stagger: FLIP_STAGGER, duration: FLIP_DURATION }));
     setRevealing(player.id);
     setQuery("");
     setOpen(false);
@@ -136,7 +139,18 @@ export default function Game() {
     const next = { ...game, hints: [...game.hints, type] };
     setGame(next);
     persist(next);
+    feedback(planHint(soundPolicy()));
     setNewHint(type);
+  }
+
+  const soundPolicy = () => feedbackPolicy(getSoundSetting(), !!reduceMotion);
+
+  /** Sonido y vibración de una acción del usuario: solo aquí se crea o reanuda el audio (nunca al cargar). */
+  function feedback(plan: FeedbackPlan) {
+    if (plan.sounds.length === 0 && !plan.vibration) return;
+    const engine = getSoundEngine();
+    engine.unlock();
+    engine.run(plan);
   }
 
   /** La partida de un reto se guarda aparte de la normal. */

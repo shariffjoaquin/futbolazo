@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 6 (reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 7 (sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -205,7 +205,7 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
 - **No hay cuentas ni login.** Todo ocurre en el navegador.
 - En `localStorage` se guardan: la partida en curso (con sus pistas), los últimos 10 jugadores
   sorteados, si ya se vio la ayuda, el nivel elegido, el mejor puntaje y el total acumulado de
-  cada nivel, y las partidas de reto (aparte de la partida normal).
+  cada nivel, las partidas de reto (aparte de la partida normal) y si el sonido está activado o silenciado.
 - Si `localStorage` no está disponible (p. ej. modo privado), se juega igual, sin guardar:
   al recargar empieza una partida nueva y la exclusión de repetidos no se recuerda.
 - Datos guardados corruptos o con jugadores que ya no existen se ignoran sin romper el juego
@@ -262,6 +262,46 @@ Jugar el **mismo jugador secreto que un amigo** y comparar en el chat, sin servi
   jugador). Sin cuentas no hay forma fiable de impedirlo; es un juego entre amigos.
 - Limitación conocida: el código no es secreto. Oculta el nombre a simple vista, pero alguien con
   conocimientos técnicos podría averiguar el jugador probando códigos.
+
+### 2.11 Sonidos y vibración
+
+Efectos cortos generados en el navegador (Web Audio API), **sin archivos de audio ni dependencias**.
+
+- **Sonidos por evento**:
+
+  | Evento | Sonido |
+  |---|---|
+  | Voltear cada celda | tick suave, escalonado con la animación de volteo |
+  | Celda verde | ding agudo, cuando la celda termina de mostrarse |
+  | Celda amarilla | tono medio, cuando la celda termina de mostrarse |
+  | Intento fallido | tono bajo corto, al terminar de voltearse la fila |
+  | Pedir pista | campanita |
+  | Ganar | melodía ascendente de ~1 s, al terminar de voltearse la fila |
+  | Perder | dos tonos descendentes, al terminar de voltearse la última fila (en lugar del tono de fallo) |
+
+  - Celdas grises: sin sonido propio (solo el tick del volteo).
+  - Sin animación de volteo (movimiento reducido), los sonidos de celda se resumen en **uno solo**
+    (el mejor de la fila: verde si hay alguna, si no amarillo si hay alguna) seguido del de fallo,
+    ganar o perder, para no sonar todos a la vez.
+  - El sonido del puntaje contando queda **fuera** por ahora: coincide con la melodía de ganar y la
+    ensucia. Se puede agregar después.
+- **Vibración** (`navigator.vibrate`), una por intento, al terminar de voltearse la fila:
+  - Intento fallido sin ninguna categoría en verde: patrón **corto**.
+  - Intento fallido con al menos una categoría en verde: patrón **doble**.
+  - Ganar: patrón **largo**.
+  - Donde no existe (p. ej. iPhone) no hace nada y no da error.
+- **Botón en la cabecera** (a la izquierda del título) para silenciar o activar sonido **y**
+  vibración: ícono de altavoz (activado) o altavoz tachado (silenciado), con `aria-label`
+  "Silenciar sonido y vibración" / "Activar sonido y vibración". Al activarlo suena un ding corto de
+  confirmación. Se recuerda en `localStorage`.
+- **Por defecto**: sonido activado a **volumen bajo**.
+- **Movimiento reducido** (`prefers-reduced-motion`): con el ajuste por defecto, **sin vibración** y
+  **sin sonidos de animación** (tick de volteo); los demás sonidos sí suenan. Si el usuario
+  **activa el sonido explícitamente** con el botón (silenciar y volver a activar), suena y vibra todo.
+- **Política de autoplay**: el audio se crea o reanuda solo dentro de un gesto del usuario (elegir un
+  jugador, pedir pista, tocar el botón de sonido). **Nunca suena al cargar la página**, ni al recargar
+  una partida ya jugada, ni al abrir un reto ya terminado.
+- Silenciado: ningún sonido ni vibración.
 
 ## 3. Fuera de la fase 1
 
@@ -332,6 +372,15 @@ Jugar el **mismo jugador secreto que un amigo** y comparar en el chat, sin servi
 - [ ] CA-53: Los puntos de un reto suman al mejor y acumulado de su nivel una sola vez.
 - [ ] CA-54: Compartir un reto agrega "🏆 Reto de amigos", termina con el link del reto y no nombra al jugador.
 - [ ] CA-55: "Jugar otra vez" tras un reto vuelve al juego normal y quita `?reto=` de la URL.
+
+**Sonidos y vibración**
+- [ ] CA-56: Cada evento (volteo, verde, amarillo, fallo, pista, ganar, perder) tiene su sonido, generado con Web Audio API, sin archivos de audio ni dependencias nuevas.
+- [ ] CA-57: Los sonidos de celda van escalonados con el volteo; sin volteo se resumen en uno solo.
+- [ ] CA-58: Vibra corto al fallar, doble al fallar con alguna categoría en verde y largo al ganar; sin `navigator.vibrate` no pasa nada ni hay errores.
+- [ ] CA-59: El botón de la cabecera silencia y activa sonido y vibración, tiene `aria-label` y se usa con teclado.
+- [ ] CA-60: El ajuste se recuerda al recargar; por defecto el sonido está activado a volumen bajo.
+- [ ] CA-61: Con movimiento reducido y el ajuste por defecto no hay vibración ni tick de volteo; si el usuario activa el sonido explícitamente, sí.
+- [ ] CA-62: El audio solo se crea o reanuda tras un gesto del usuario; al cargar la página no suena nada ni hay errores en consola.
 
 **Intentos y pistas**
 - [ ] CA-09: Solo se pueden elegir jugadores de la lista; la búsqueda funciona sin tildes ni mayúsculas ("rondon" encuentra a "Yeferson Rondón").

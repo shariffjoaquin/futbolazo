@@ -14,10 +14,20 @@ const HowToPlay = dynamic(() => import("./HowToPlay"), {
   loading: () => <span className="size-11" aria-hidden />,
 });
 
+// Lee el ajuste de sonido de localStorage: solo en el cliente.
+const SoundToggle = dynamic(() => import("./SoundToggle"), {
+  ssr: false,
+  loading: () => <span className="size-11" aria-hidden />,
+});
+
 export default function GameLoader() {
   return <Game />;
 }
 
 export function HowToPlayLoader() {
   return <HowToPlay />;
+}
+
+export function SoundToggleLoader() {
+  return <SoundToggle />;
 }

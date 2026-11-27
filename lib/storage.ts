@@ -3,6 +3,7 @@ import { DEFAULT_NIVEL, isNivel, NIVELES, type Nivel } from "./difficulty";
 import { HINT_TYPES, MAX_HINTS, type HintType } from "./hints";
 import { RECENT_LIMIT } from "./random";
 import { addScore, EMPTY_STATS, type ScoreStats } from "./score";
+import type { SoundSetting } from "./sounds";
 import { MAX_GUESSES } from "./share";
 
 const GAME_KEY = "futbolazo:v2:partida";
@@ -10,6 +11,7 @@ const RECENT_KEY = "futbolazo:v2:recientes";
 const HELP_KEY = "futbolazo:v2:visto-ayuda";
 const SCORE_KEY = "futbolazo:v2:puntaje";
 const NIVEL_KEY = "futbolazo:v2:nivel";
+const SOUND_KEY = "futbolazo:v2:sonido";
 const CHALLENGES_KEY = "futbolazo:v2:retos";
 /** Partidas de reto que se guardan como máximo (las más recientes). */
 export const MAX_SAVED_CHALLENGES = 30;
@@ -125,6 +127,22 @@ export function saveChallenge(code: string, game: SavedGame): void {
   const codes = Object.keys(all);
   for (const old of codes.slice(0, Math.max(0, codes.length - MAX_SAVED_CHALLENGES))) delete all[old];
   write(CHALLENGES_KEY, all);
+}
+
+/** Ajuste de sonido: `"on"` / `"off"` si se tocó el botón; si no, `"default"`. */
+export function loadSoundSetting(): SoundSetting {
+  const value = read(SOUND_KEY);
+  return value === "on" || value === "off" ? value : "default";
+}
+
+export function saveSoundSetting(value: SoundSetting): void {
+  if (value === "default") {
+    try {
+      localStorage.removeItem(SOUND_KEY);
+    } catch {
+      // Sin localStorage el ajuste queda solo en memoria.
+    }
+  } else write(SOUND_KEY, value);
 }
 
 /** Nivel elegido para las partidas nuevas; Normal si no hay o no es válido. */

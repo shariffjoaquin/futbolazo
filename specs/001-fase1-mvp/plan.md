@@ -44,6 +44,8 @@ futbolazo/
 │   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
 │   ├── difficulty.ts     # Niveles Fácil / Normal, clubes de Fácil y grupo de sorteo del secreto
 │   ├── challenge.ts      # Reto de amigos: código del link (codificar, decodificar, validar) e invitación
+│   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
+│   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de random, game, storage, daily, compare y share
 ├── specs/
@@ -89,6 +91,7 @@ futbolazo/
       lo que falte o no sea válido cuenta como 0; el formato viejo `{ mejor, total }` se lee como Normal)
     - La partida guarda `nivel`; sin `nivel` se carga como `"normal"`.
     - `futbolazo:v2:retos` → `{ [código]: partida }` (mismo formato que `partida`, máx. 30).
+    - `futbolazo:v2:sonido` → `"on" | "off"` (si falta: ajuste por defecto).
     - Al cargar se descartan ids desconocidos, duplicados y lo que pase de 6 intentos. Si el
       `targetId` no existe o la fecha no es válida, la partida se descarta.
     - Al guardar se borran las claves antiguas `futbolazo:v1:*` del modo diario.
@@ -138,12 +141,26 @@ futbolazo/
       se limpia con `window.history.replaceState`, que Next 16 integra con su router.
     - Los récords se suman en el mismo punto que una partida normal (el intento que la termina), y
       como un reto terminado no se puede reabrir para jugar, suman una sola vez.
-15. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+15. **Sonidos y vibración** (sin dependencias ni archivos de audio):
+    - `lib/sounds.ts` (puro, con tests): cada sonido es una lista de notas (frecuencia, inicio,
+      duración, forma de onda, ganancia); `feedbackPolicy(ajuste, movimientoReducido)` decide si hay
+      sonido, sonidos de animación y vibración; `planGuess(...)` y `planHint(...)` devuelven qué
+      sonidos van en qué segundo y qué patrón de vibración, ya filtrados por la política. Los tiempos
+      salen de las mismas constantes del volteo (`FLIP_STAGGER`, `FLIP_DURATION`).
+    - `lib/audio.ts`: motor con `AudioContext` inyectable. **No crea el contexto al construirse**:
+      `unlock()` lo crea o lo reanuda y solo se llama dentro de manejadores de eventos del usuario.
+      `play` programa osciladores con `currentTime + inicio` (sin `setTimeout`); la vibración usa un
+      temporizador y está envuelta en `try/catch`. Un volumen maestro bajo (0,25) para todo.
+      Los tests usan un `AudioContext` y un `vibrate` simulados.
+    - El ajuste vive en memoria (y se guarda en `localStorage`), así silenciar funciona aunque
+      `localStorage` esté bloqueado. El botón de la cabecera se carga solo en el cliente, como la ayuda.
+    - El movimiento reducido se lee con `useReducedMotion` de Motion en el momento del evento.
+16. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-16. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+17. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-17. **Textos de la interfaz en español** y `lang="es"`.
-18. **Sin dependencias de runtime** aparte de Next y React.
+18. **Textos de la interfaz en español** y `lang="es"`.
+19. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 

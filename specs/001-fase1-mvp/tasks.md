@@ -98,6 +98,15 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T43.7 Tests de `challenge`, guardado de retos, arranque con `?reto=` y textos
   - [x] T43.8 Probado en navegador a 360 px y 1280 px
 
+- [ ] T44 **Sonidos y vibración**
+  - [x] T44.1 `lib/sounds.ts`: notas de cada sonido, política (ajuste + movimiento reducido) y plan por evento
+  - [x] T44.2 `lib/audio.ts`: motor Web Audio que solo arranca tras un gesto, vibración segura
+  - [x] T44.3 Sonidos al intentar (escalonados con el volteo), al pedir pista, al ganar y al perder; vibración
+  - [x] T44.4 Botón Volume2 / VolumeX en la cabecera, accesible, guardado en `futbolazo:v2:sonido`
+  - [x] T44.5 Tests: plan por evento, movimiento reducido, silenciado, motor con contexto y vibración simulados, guardado
+  - [x] T44.6 Probado en navegador: el botón silencia, se recuerda al recargar, sin errores en consola
+  - [ ] T44.7 Sonido real y vibración en celulares (lo prueba el usuario)
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado
