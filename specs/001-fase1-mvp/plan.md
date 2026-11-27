@@ -41,6 +41,7 @@ futbolazo/
 │   ├── storage.ts        # Guardar/cargar partida en curso y recientes en localStorage
 │   ├── compare.ts        # Comparación intento vs objetivo, cálculo de edad
 │   ├── share.ts          # Texto para compartir, MAX_GUESSES, orden de atributos
+│   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de random, game, storage, daily, compare y share
 ├── specs/
@@ -81,17 +82,35 @@ futbolazo/
     - `futbolazo:v2:partida` → `{ "targetId": string, "guesses": string[], "fecha": "YYYY-MM-DD", "hints": HintType[] }`
       (`hints` es opcional al leer: una partida guardada antes del botón de pista se carga con `[]`)
     - `futbolazo:v2:recientes` → `string[]` (máx. 10, el más reciente al final)
+    - `futbolazo:v2:puntaje` → `{ "mejor": number, "total": number }` (enteros ≥ 0; si falta o no es
+      válido, se toma `{ mejor: 0, total: 0 }`)
     - Al cargar se descartan ids desconocidos, duplicados y lo que pase de 6 intentos. Si el
       `targetId` no existe o la fecha no es válida, la partida se descarta.
     - Al guardar se borran las claves antiguas `futbolazo:v1:*` del modo diario.
 11. **Compartir**: `navigator.share` primero y portapapeles como respaldo. El texto no lleva número de
-    puzzle ni revela al jugador.
-12. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+    puzzle; desde la revisión 4 lleva el puntaje y una frase con el jugador secreto de la partida
+    (cada partida es al azar, así que no arruina la de otro). `buildShareText` recibe un objeto
+    (`results`, `won`, `hintsUsed`, `points`, `targetName`, `url`) y no calcula el puntaje: lo recibe,
+    para que `share.ts` no dependa de `score.ts`.
+12. **Puntaje** (`lib/score.ts`, lógica pura):
+    - Constantes en un solo lugar: `WIN_BASE = [1000, 850, 700, 550, 400, 250]`,
+      `UNUSED_HINT_BONUS = 100`, `CATEGORY_POINTS = { correct: 40, close: 20, wrong: 0 }`; de ahí salen
+      `MAX_WIN_SCORE` (1200) y `MAX_LOSS_SCORE` (240).
+    - `computeScore(results, hintsUsed)` devuelve el desglose (ganada: intento, base, pistas sin usar,
+      bonus, total; perdida: mejor estado y puntos por categoría, total). Ganar se deduce de que algún
+      intento sea el jugador secreto. Las pistas del botón no entran: solo se miran los intentos.
+    - `addScore(stats, points)` actualiza mejor y acumulado. `recordScore(points)` en `storage.ts` lo
+      persiste. Se llama **solo en el envío del intento que termina la partida**, nunca al cargar, así
+      recargar una partida terminada no suma dos veces.
+    - El conteo animado usa `animate` de Motion sobre un `MotionValue`; con movimiento reducido
+      (`useReducedMotion`) se pone el valor final directo. El número animado va `aria-hidden` y el
+      total se lee una sola vez con texto para lectores de pantalla.
+13. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-13. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+14. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-14. **Textos de la interfaz en español** y `lang="es"`.
-15. **Sin dependencias de runtime** aparte de Next y React.
+15. **Textos de la interfaz en español** y `lang="es"`.
+16. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 
@@ -143,6 +162,9 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
     con `aria-live="polite"`. Entran con el mismo rebote que las filas de intento (sin animación con
     movimiento reducido).
   - Las etiquetas de posición y pie pasan a `lib/labels.ts` para compartirlas entre celdas y pistas.
+- **Puntaje en la tarjeta final**: bloque "Puntaje" entre el jugador revelado y la grilla de emojis:
+  total grande en Barlow Condensed con conteo, desglose en filas (al perder, una casilla por
+  categoría con el color de su mejor resultado) y una línea "Mejor · Acumulado" debajo.
 - **Restricción legal**: **sin escudos, logos, fotos ni imágenes oficiales** de clubes o jugadores.
   Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
 

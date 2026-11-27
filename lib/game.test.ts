@@ -2,7 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerById, players } from "../data/players";
 import { resumeOrStartGame, startNewGame } from "./game";
 import type { HintType } from "./hints";
-import { loadGame, loadHelpSeen, loadRecent, saveGame, saveHelpSeen, saveRecent } from "./storage";
+import {
+  loadGame,
+  loadHelpSeen,
+  loadRecent,
+  loadStats,
+  recordScore,
+  saveGame,
+  saveHelpSeen,
+  saveRecent,
+} from "./storage";
 
 /** localStorage en memoria (los tests corren en Node). */
 function memoryStorage(): Storage {
@@ -98,7 +107,34 @@ describe("storage", () => {
     expect(() => saveRecent([a.id])).not.toThrow();
     expect(loadHelpSeen()).toBe(false);
     expect(() => saveHelpSeen()).not.toThrow();
+    expect(loadStats()).toEqual({ mejor: 0, total: 0 });
+    expect(recordScore(650)).toEqual({ mejor: 650, total: 650 });
     expect(players).toContainEqual(getPlayerById(resumeOrStartGame().targetId));
+  });
+});
+
+describe("récords de puntaje", () => {
+  it("empiezan en cero, guardan el mejor y acumulan el total", () => {
+    expect(loadStats()).toEqual({ mejor: 0, total: 0 });
+    recordScore(650);
+    recordScore(120);
+    expect(recordScore(900)).toEqual({ mejor: 900, total: 1670 });
+    expect(loadStats()).toEqual({ mejor: 900, total: 1670 });
+  });
+
+  it("cargar no suma: recargar una partida terminada deja los récords igual", () => {
+    recordScore(650);
+    loadStats();
+    loadGame();
+    expect(loadStats()).toEqual({ mejor: 650, total: 650 });
+  });
+
+  it("ignora récords corruptos o con valores no válidos", () => {
+    for (const raw of ["{no es json", "null", "[]", '{"mejor":-5,"total":10}', '{"mejor":"9","total":10}', '{"mejor":1.5,"total":2}', '{"mejor":10}']) {
+      localStorage.setItem("futbolazo:v2:puntaje", raw);
+      expect(loadStats()).toEqual({ mejor: 0, total: 0 });
+    }
+    expect(recordScore(250)).toEqual({ mejor: 250, total: 250 });
   });
 });
 

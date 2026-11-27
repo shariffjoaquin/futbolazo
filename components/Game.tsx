@@ -13,8 +13,9 @@ import { getPlayerById, players, type Player } from "@/data/players";
 import { compare } from "@/lib/compare";
 import { resumeOrStartGame, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
+import { computeScore } from "@/lib/score";
 import { buildShareText, MAX_GUESSES } from "@/lib/share";
-import { saveGame, type SavedGame } from "@/lib/storage";
+import { loadStats, recordScore, saveGame, type SavedGame } from "@/lib/storage";
 
 const normalize = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
@@ -37,6 +38,8 @@ export default function Game() {
   const [revealing, setRevealing] = useState<string | null>(null);
   // Última pista pedida en esta sesión: solo esa entra animada.
   const [newHint, setNewHint] = useState<HintType | null>(null);
+  // Mejor puntaje y acumulado; solo cambian al terminar una partida (nunca al recargar).
+  const [stats, setStats] = useState(loadStats);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reduceMotion = useReducedMotion();
 
@@ -51,6 +54,7 @@ export default function Game() {
   const results = rows.map((r) => r.result);
   const won = guesses.includes(target.id);
   const over = won || guesses.length >= MAX_GUESSES;
+  const score = over ? computeScore(results, game.hints.length) : null;
   const hintState = hintButtonState({
     failedGuesses: guesses.filter((id) => id !== target.id).length,
     hintsUsed: game.hints.length,
@@ -89,6 +93,11 @@ export default function Game() {
     const next = { ...game, guesses: [...guesses, player.id] };
     setGame(next);
     saveGame(next);
+    // El intento que termina la partida es el único que suma a los récords.
+    if (player.id === target.id || next.guesses.length >= MAX_GUESSES) {
+      const finalResults = [...results, compare(player, target, dateKey)];
+      setStats(recordScore(computeScore(finalResults, game.hints.length).total));
+    }
     setRevealing(player.id);
     setQuery("");
     setOpen(false);
@@ -125,12 +134,15 @@ export default function Game() {
   }
 
   async function share() {
-    const text = buildShareText(
+    if (!score) return;
+    const text = buildShareText({
       results,
       won,
-      window.location.origin + window.location.pathname,
-      game.hints.length,
-    );
+      points: score.total,
+      targetName: target.nombre,
+      url: window.location.origin + window.location.pathname,
+      hintsUsed: game.hints.length,
+    });
     if (navigator.share) {
       try {
         await navigator.share({ text });
@@ -219,12 +231,14 @@ export default function Game() {
         )}
 
         <AnimatePresence mode="wait">
-          {over && (
+          {score && (
             <ResultPanel
               key={game.targetId + game.fecha}
               won={won}
               target={target}
               results={results}
+              score={score}
+              stats={stats}
               gameKey={game.targetId + guesses.join()}
               delay={resultDelay}
               onShare={share}

@@ -16,7 +16,8 @@ npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2
 - `lib/random.ts` — sorteo al azar sin repetir los últimos 10
 - `lib/game.ts` — empezar partida nueva o retomar la guardada
 - `lib/compare.ts` — comparación intento vs objetivo
-- `lib/share.ts` — texto para compartir
+- `lib/share.ts` — texto para compartir (puntaje y frase con el jugador)
+- `lib/score.ts` — puntaje de la partida (constantes ajustables) y récords
 - `lib/storage.ts` — partida en curso y recientes en localStorage
 - `lib/daily.ts` — fecha de Lima; modo diario (futuro, sin uso en la UI)
 - `specs/001-fase1-mvp/` — especificación de la fase 1

@@ -70,6 +70,14 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T40.6 Tests: atributo acertado, grupo secundario, máximo 2, aparición del botón, recarga, compartir
   - [x] T40.7 Probado en navegador a 360 px y 1280 px
 
+- [x] T41 **Puntaje y texto de compartir**
+  - [x] T41.1 Lógica pura en `lib/score.ts` con constantes ajustables (base por intento, bonus por pistas, parciales por categoría)
+  - [x] T41.2 Mejor puntaje y total acumulado en `futbolazo:v2:puntaje`, sumados una sola vez al terminar
+  - [x] T41.3 Tarjeta final: desglose, total con conteo animado (respeta movimiento reducido), mejor y acumulado
+  - [x] T41.4 Compartir: ` · N pts` en el encabezado, frase con el jugador (singular/plural) y URL al final
+  - [x] T41.5 Tests: ganar en cada intento con 0, 1 y 2 pistas; perder con parciales; todo gris = 0; tope 240 < 250; pistas no suman; récords; texto de compartir
+  - [x] T41.6 Probado en navegador a 360 px y 1280 px
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado

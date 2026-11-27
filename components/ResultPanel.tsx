@@ -1,11 +1,14 @@
 "use client";
 
 import { RotateCcw, Share2 } from "lucide-react";
-import { motion } from "motion/react";
+import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { useEffect } from "react";
+import { STATUS_CLASS } from "@/components/HintCell";
 import { Button } from "@/components/ui/button";
 import type { Player } from "@/data/players";
 import type { CompareResult } from "@/lib/compare";
-import { POSITION_LABEL } from "@/lib/labels";
+import { CATEGORY_LABEL, POSITION_LABEL } from "@/lib/labels";
+import { formatPoints, type ScoreBreakdown, type ScoreStats } from "@/lib/score";
 import { ATTRIBUTES, EMOJI, MAX_GUESSES } from "@/lib/share";
 
 const LOSS_LINES = [
@@ -28,6 +31,8 @@ export function ResultPanel({
   won,
   target,
   results,
+  score,
+  stats,
   gameKey,
   delay,
   onShare,
@@ -36,6 +41,9 @@ export function ResultPanel({
   won: boolean;
   target: Player;
   results: CompareResult[];
+  score: ScoreBreakdown;
+  /** Récords guardados, ya con esta partida sumada. */
+  stats: ScoreStats;
   /** Identifica la partida para elegir la frase. */
   gameKey: string;
   /** Espera a que termine de voltearse la última fila. */
@@ -72,6 +80,8 @@ export function ResultPanel({
           </p>
         </div>
 
+        <ScoreCard score={score} stats={stats} delay={delay} />
+
         <figure className="flex flex-col items-center gap-1.5">
           <figcaption className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Tu jugada · {won ? results.length : "X"}/{MAX_GUESSES}
@@ -107,6 +117,84 @@ export function ResultPanel({
       </div>
     </motion.section>
   );
+}
+
+const pointsText = (n: number) => `${formatPoints(n)} ${n === 1 ? "punto" : "puntos"}`;
+
+/** Desglose del puntaje con el total contando hacia arriba, y los récords debajo. */
+function ScoreCard({ score, stats, delay }: { score: ScoreBreakdown; stats: ScoreStats; delay: number }) {
+  return (
+    <div className="w-full rounded-2xl bg-black/30 px-4 py-3 text-left">
+      <p className="text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">Puntaje</p>
+      <dl className="mt-2 flex flex-col gap-1.5 text-sm">
+        {score.won ? (
+          <>
+            <ScoreLine label={`Acierto en el intento ${score.attempt}`} value={formatPoints(score.base)} />
+            <ScoreLine
+              label={`${score.unusedHints} ${score.unusedHints === 1 ? "pista" : "pistas"} sin usar`}
+              value={`+${formatPoints(score.hintBonus)}`}
+            />
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {score.categories.map((c) => (
+                <div
+                  key={c.attr}
+                  className={`flex items-baseline justify-between gap-1 rounded-lg px-2 py-1 ${STATUS_CLASS[c.status]}`}
+                >
+                  <dt className="truncate text-[11px] font-semibold uppercase">{CATEGORY_LABEL[c.attr]}</dt>
+                  <dd className="font-display text-base leading-none font-bold">{c.points}</dd>
+                </div>
+              ))}
+            </div>
+            <ScoreLine label="Pistas (bonus solo al ganar)" value="+0" />
+          </>
+        )}
+        <div className="mt-1 flex items-baseline justify-between border-t border-white/10 pt-2">
+          <dt className="font-semibold">Total</dt>
+          <dd className="font-display text-4xl leading-none font-extrabold text-hint-gold">
+            <span className="sr-only">{pointsText(score.total)}</span>
+            <CountUp value={score.total} delay={delay} />
+            <span aria-hidden className="ml-1 text-lg">
+              pts
+            </span>
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Mejor <strong className="text-foreground">{formatPoints(stats.mejor)}</strong> · Acumulado{" "}
+        <strong className="text-foreground">{formatPoints(stats.total)}</strong>
+      </p>
+    </div>
+  );
+}
+
+function ScoreLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-foreground/85">{label}</dt>
+      <dd className="font-display text-lg leading-none font-bold">{value}</dd>
+    </div>
+  );
+}
+
+/** Cuenta de 0 al total cuando aparece la tarjeta; con movimiento reducido muestra el total directo. */
+function CountUp({ value, delay }: { value: number; delay: number }) {
+  const reduceMotion = useReducedMotion();
+  const count = useMotionValue(reduceMotion ? value : 0);
+  const text = useTransform(count, (v) => formatPoints(Math.round(v)));
+
+  useEffect(() => {
+    if (reduceMotion) {
+      count.set(value);
+      return;
+    }
+    const controls = animate(count, value, { delay: delay + 0.4, duration: 1.2, ease: "easeOut" });
+    return () => controls.stop();
+  }, [count, value, delay, reduceMotion]);
+
+  return <motion.span aria-hidden>{text}</motion.span>;
 }
 
 /** Polígono de una franja diagonal entre las rectas x − y = c1 y x − y = c2, recortada a la caja de 120 × 120. */

@@ -1,11 +1,13 @@
 import { getPlayerById } from "../data/players";
 import { HINT_TYPES, MAX_HINTS, type HintType } from "./hints";
 import { RECENT_LIMIT } from "./random";
+import { addScore, EMPTY_STATS, type ScoreStats } from "./score";
 import { MAX_GUESSES } from "./share";
 
 const GAME_KEY = "futbolazo:v2:partida";
 const RECENT_KEY = "futbolazo:v2:recientes";
 const HELP_KEY = "futbolazo:v2:visto-ayuda";
+const SCORE_KEY = "futbolazo:v2:puntaje";
 /** Claves del modo diario anterior (una por fecha). */
 const LEGACY_PREFIX = "futbolazo:v1:";
 
@@ -84,4 +86,23 @@ export function loadHelpSeen(): boolean {
 
 export function saveHelpSeen(): void {
   write(HELP_KEY, true);
+}
+
+const isPoints = (n: unknown): n is number => Number.isSafeInteger(n) && (n as number) >= 0;
+
+/** Mejor puntaje y total acumulado; en cero si no hay o no son válidos. */
+export function loadStats(): ScoreStats {
+  const data = read(SCORE_KEY) as Partial<Record<keyof ScoreStats, unknown>> | null;
+  if (!data || typeof data !== "object" || !isPoints(data.mejor) || !isPoints(data.total)) return EMPTY_STATS;
+  return { mejor: data.mejor, total: data.total };
+}
+
+/**
+ * Suma el puntaje de una partida recién terminada y devuelve los récords nuevos.
+ * Llamarla solo con el intento que termina la partida, nunca al cargar.
+ */
+export function recordScore(points: number): ScoreStats {
+  const stats = addScore(loadStats(), points);
+  write(SCORE_KEY, stats);
+  return stats;
 }

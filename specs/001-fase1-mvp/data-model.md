@@ -38,6 +38,7 @@ Limitaciones:
 | `futbolazo:v2:partida` | `{ "targetId": "diego-quispe", "guesses": ["luis-arana"], "fecha": "2026-11-26", "hints": ["club"] }` | partida en curso o recién terminada; `fecha` = día de Lima en que empezó, para calcular edades; `hints` = tipos de pista pedidos, en orden (máx. 2) |
 | `futbolazo:v2:recientes` | `["renzo-carrillo", "diego-quispe"]` | últimos 10 jugadores sorteados, el más reciente al final |
 | `futbolazo:v2:visto-ayuda` | `true` | ya se mostró "¿Cómo se juega?"; si falta, el diálogo se abre solo |
+| `futbolazo:v2:puntaje` | `{ "mejor": 1050, "total": 4320 }` | `mejor` = puntaje más alto de una partida; `total` = suma de todas las partidas terminadas. Enteros ≥ 0; si falta o no es válido se toma `{ "mejor": 0, "total": 0 }`. Se actualiza una sola vez por partida, al terminar |
 | `futbolazo:v1:<YYYY-MM-DD>` | `{ "guesses": [...] }` | **obsoleta** (modo diario anterior); se borra al guardar |
 
 Si un jugador desaparece de la lista (p. ej. al cambiar de temporada), su id se ignora en `guesses`
