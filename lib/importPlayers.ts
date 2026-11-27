@@ -32,6 +32,7 @@ export const PAISES = [
   "México",
   "España",
   "Italia",
+  "Panamá",
 ];
 
 export type ImportResult = { ok: true; players: Player[] } | { ok: false; errors: string[] };

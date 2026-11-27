@@ -158,7 +158,7 @@ temporada,jugador_id,nombre,club_id,club_nombre,nacionalidad,posicion,fecha_naci
 - `elegible`: opcional, por defecto `true`.
 - `nacionalidad`: lista cerrada de países en español para que la comparación exacta funcione:
   Perú, Argentina, Uruguay, Paraguay, Chile, Ecuador, Bolivia, Brasil, Colombia, Venezuela, México,
-  España e Italia. Un país nuevo se agrega primero a esa lista (`lib/importPlayers.ts`).
+  España, Italia y Panamá. Un país nuevo se agrega primero a esa lista (`lib/importPlayers.ts`).
 - Columnas extra (p. ej. `fuente`, `verificado_en`, `verif_*`, `notas_revision`) se permiten y se ignoran.
 - Campos con comas, comillas o saltos de línea van entre comillas dobles (`""` dentro = una comilla).
   Se aceptan finales de línea LF o CRLF y BOM UTF-8.

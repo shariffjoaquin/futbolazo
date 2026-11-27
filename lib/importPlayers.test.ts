@@ -111,6 +111,11 @@ describe("validateRows", () => {
     ]);
   });
 
+  it("acepta los países de la lista, incluido Panamá", () => {
+    const r = run(csv("2026,a,Uno,c,Club,Panamá,DEL,2000-01-01,9,D,true,,"));
+    expect(r.ok && r.players[0].nacionalidad).toBe("Panamá");
+  });
+
   it("lista todos los errores, no solo el primero", () => {
     const errs = errorsOf(csv("2026,a,Uno,c,Club,Perú,XX,2000-13-01,100,,true,,"));
     expect(errs).toHaveLength(4);
