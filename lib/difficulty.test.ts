@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { players, type Player } from "../data/players";
-import { DEFAULT_NIVEL, EASY_CLUBS, isNivel, NIVEL_LABEL, secretPool } from "./difficulty";
+import { DEFAULT_NIVEL, EASY_CLUBS, isNivel, NIVEL_DESCRIPTION, NIVEL_LABEL, secretPool } from "./difficulty";
 import { pickRandomPlayer } from "./random";
 
 describe("secretPool", () => {
@@ -64,5 +64,14 @@ describe("niveles", () => {
     expect(isNivel("normal")).toBe(true);
     expect(isNivel("Fácil")).toBe(false);
     expect(isNivel(null)).toBe(false);
+  });
+});
+
+describe("NIVEL_DESCRIPTION", () => {
+  it("explica cada nivel hablando del jugador secreto", () => {
+    expect(NIVEL_DESCRIPTION).toEqual({
+      facil: "El jugador secreto es de Universitario, Alianza Lima, Sporting Cristal, Cienciano o Melgar.",
+      normal: "El jugador secreto puede ser de cualquier club.",
+    });
   });
 });

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
+import { ICON_COLORS } from "@/lib/brandIcon";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050d09",
+  themeColor: ICON_COLORS.night,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

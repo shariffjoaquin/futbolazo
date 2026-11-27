@@ -1,19 +1,12 @@
 "use client";
 
 import { useId } from "react";
-import { EASY_CLUBS, NIVEL_LABEL, NIVELES, type Nivel } from "@/lib/difficulty";
+import { NIVEL_DESCRIPTION, NIVEL_LABEL, NIVELES, type Nivel } from "@/lib/difficulty";
 import { cn } from "@/lib/utils";
-
-const clubsText = `${EASY_CLUBS.slice(0, -1).join(", ")} o ${EASY_CLUBS.at(-1)}`;
-
-const DESCRIPTION: Record<Nivel, string> = {
-  facil: `El secreto es de ${clubsText}.`,
-  normal: "El secreto puede ser de cualquier club.",
-};
 
 /**
  * Selector Fácil / Normal. Radios nativos: Tab entra al grupo, las flechas cambian de opción.
- * El nivel solo decide de qué clubes sale el secreto; el buscador siempre tiene a todos.
+ * El nivel solo decide de qué clubes sale el jugador secreto; el buscador siempre tiene a todos.
  */
 export function DifficultyPicker({
   value,
@@ -57,7 +50,7 @@ export function DifficultyPicker({
         ))}
       </div>
       <p id={descId} className="text-center text-xs text-muted-foreground">
-        {DESCRIPTION[value]}
+        {NIVEL_DESCRIPTION[value]}
       </p>
     </fieldset>
   );

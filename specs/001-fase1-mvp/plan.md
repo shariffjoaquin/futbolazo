@@ -26,10 +26,14 @@
 ```
 futbolazo/
 ├── app/
-│   ├── layout.tsx        # HTML raíz, fuente Geist, metadata, lang="es", themeColor
+│   ├── layout.tsx        # HTML raíz, fuentes (Inter, Barlow Condensed), metadata, lang="es", themeColor
 │   ├── page.tsx          # Portada: título + <GameLoader />
-│   ├── globals.css       # Tailwind + variable de fuente
-│   └── favicon.ico
+│   ├── globals.css       # Tailwind + variables de marca
+│   ├── manifest.ts       # Manifiesto: nombre, colores, standalone, íconos
+│   ├── icon.svg          # Favicon (generado desde lib/brandIcon.ts)
+│   ├── favicon.ico       # 16/32/48 px, mismo diseño (generado)
+│   └── apple-icon.png    # 180 px (generado)
+├── public/icons/         # icon-192.png, icon-512.png, icon-maskable-512.png (generados)
 ├── components/
 │   ├── GameLoader.tsx    # Carga <Game /> solo en el cliente (dynamic, ssr: false)
 │   └── Game.tsx          # UI: buscador, filas de pistas, fin de partida, compartir, jugar otra vez
@@ -48,6 +52,7 @@ futbolazo/
 │   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
 │   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
 │   ├── search.ts         # Búsqueda de jugadores sin tildes, con largo máximo (40)
+│   ├── brandIcon.ts      # SVG del ícono (balón y banda roja) y colores; fuente de todos los íconos
 │   ├── securityHeaders.ts # CSP y cabeceras de seguridad (las aplica next.config.ts)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de cada módulo; hostile.test.ts: URL y localStorage manipulados
@@ -195,12 +200,29 @@ futbolazo/
       caracteres (`lib/search.ts`, pura). Todo se muestra como texto con React.
     - **Dependencias:** Vitest 4 (cierra las vulnerabilidades de `tinypool` y `@vitest/mocker`) y
       Dependabot semanal para npm.
-17. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+17. **Ícono del juego** (spec §2.14; sin dependencias nuevas):
+    - **Una sola fuente**: `lib/brandIcon.ts` arma el SVG (viewBox 64 × 64) con opciones de esquinas
+      redondeadas y margen. Formas gruesas para 16 px: balón de radio 21, pentágono central, cinco
+      costuras de 2,4 y parches del borde recortados por el balón, contorno oscuro de 2 para separarlo
+      de la banda roja.
+    - **`npm run icons`** (`scripts/generate-icons.tsx`) escribe `app/icon.svg` y convierte el SVG a
+      PNG con `ImageResponse` de `next/og`, que ya viene con Next: `app/apple-icon.png` (180),
+      `public/icons/icon-192.png`, `icon-512.png` e `icon-maskable-512.png` (margen del 10 %, el balón
+      queda dentro de la zona segura). `app/favicon.ico` se arma a mano: cabecera ICO con PNG de 16,
+      32 y 48 px adentro. Los archivos generados se versionan; un test avisa si `app/icon.svg` no
+      coincide con `lib/brandIcon.ts`.
+    - **Esquinas**: redondeadas en `icon.svg`, `favicon.ico` y los íconos de 192/512; cuadradas en
+      `apple-icon` y el maskable, porque el sistema les pone su propia máscara.
+    - **Manifiesto** con `app/manifest.ts` (Next lo sirve en `/manifest.webmanifest` y agrega el
+      `<link>`); `theme_color` y `background_color` salen de `ICON_COLORS.night`, el mismo valor que
+      `themeColor` del layout y `--stadium-night`.
+    - La CSP no cambia: íconos y manifiesto son del propio sitio (`img-src 'self'`, `default-src 'self'`).
+18. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-18. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+19. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-19. **Textos de la interfaz en español** y `lang="es"`.
-20. **Sin dependencias de runtime** aparte de Next y React.
+20. **Textos de la interfaz en español** y `lang="es"`.
+21. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 

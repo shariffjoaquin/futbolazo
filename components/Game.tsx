@@ -436,7 +436,7 @@ function Legend() {
         <span className="size-3 rounded-sm bg-hint-wrong ring-1 ring-white/20" />
         No
       </span>
-      <span>↑↓ el secreto tiene más / menos</span>
+      <span>↑↓ el jugador secreto tiene más / menos</span>
     </div>
   );
 }

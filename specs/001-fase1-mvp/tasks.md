@@ -161,5 +161,15 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T46.8 Navegador a 360 y 1280 px con la CSP activa: juego completo y sin violaciones en consola
   - [ ] T46.9 Revisar las cabeceras en el despliegue real de Vercel (pendiente de T30.3)
 
+## Ícono y textos
+- [x] T47 **Ícono propio** (spec §2.14, plan decisión 17)
+  - [x] T47.1 `lib/brandIcon.ts`: SVG del balón con banda roja, legible a 16 y 32 px
+  - [x] T47.2 `scripts/generate-icons.tsx` (`npm run icons`): `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png`, `public/icons/` 192, 512 y maskable
+  - [x] T47.3 Reemplazar el `favicon.ico` de Next.js por el generado
+  - [x] T47.4 `app/manifest.ts` y `themeColor` desde `ICON_COLORS.night`
+  - [x] T47.5 Tests: `icon.svg` igual al generado, tamaños de los PNG e ICO, manifiesto, colores del tema
+  - [x] T47.6 Navegador: pestaña a 16 y 32 px, manifiesto e íconos cargan, sin errores de CSP
+- [x] T48 **Texto "el jugador secreto"** en el selector de nivel y en la leyenda de colores
+
 ## Futuro (fuera de la fase 1)
 - [ ] F01 **Modo diario**: exponer `lib/daily.ts` como modo aparte, con su guardado, número de puzzle y `puzzles_diarios` en Supabase

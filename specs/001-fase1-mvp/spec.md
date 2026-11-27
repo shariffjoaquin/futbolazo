@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 9 (seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 10 (ícono propio y texto del selector de nivel; la 9 agregó seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -32,7 +32,7 @@ que se pueda publicar y compartir.
 - Dos niveles: **Fácil** y **Normal**. Por defecto: **Normal**.
 - El nivel **solo limita de qué jugadores se sortea el jugador secreto**. El buscador y los intentos
   usan **todos** los jugadores en ambos niveles.
-  - **Fácil**: el secreto sale solo de los clubes grandes: **Universitario, Alianza Lima, Sporting
+  - **Fácil**: el jugador secreto sale solo de los clubes grandes: **Universitario, Alianza Lima, Sporting
     Cristal, Cienciano y Melgar** (`club_id` del CSV: `universitario`, `alianza-lima`,
     `sporting-cristal`, `cienciano`, `melgar`; no confundir Alianza Lima con Alianza Atlético).
     La lista está en una sola constante para poder cambiarla.
@@ -41,11 +41,14 @@ que se pueda publicar y compartir.
     **cae a Normal** sin romper el juego.
 - **Selector** Fácil / Normal, con el estilo del juego y usable con teclado (flechas, Tab, Espacio):
   - **Antes de la primera jugada**: visible sobre el buscador mientras la partida no tiene intentos.
-    Cambiarlo ahí vuelve a sortear al secreto con el nivel nuevo (la partida aún no empezó de verdad).
+    Cambiarlo ahí vuelve a sortear al jugador secreto con el nivel nuevo (la partida aún no empezó de verdad).
   - **Al terminar**: visible en la tarjeta final como "Nivel de la próxima partida"; se aplica al
     pulsar "Jugar otra vez".
   - **A media partida** (desde el primer intento hasta el final) no se puede cambiar: el selector no
     se muestra y en su lugar se ve el nivel de la partida en curso.
+- Debajo del selector, una línea explica el nivel elegido:
+  - Fácil: "El jugador secreto es de Universitario, Alianza Lima, Sporting Cristal, Cienciano o Melgar."
+  - Normal: "El jugador secreto puede ser de cualquier club."
 - El nivel elegido se guarda en `localStorage` y se recuerda al volver. La partida guardada incluye
   su propio nivel; una partida guardada sin nivel (de antes de este cambio) se toma como Normal.
 
@@ -372,6 +375,23 @@ hacerlo se cubre lo básico:
 - **Sin secretos en el repo**: ni claves ni `.env` versionados; `.gitignore` los cubre.
 - **Dependencias al día**: `npm audit` sin vulnerabilidades y Dependabot revisa npm cada semana.
 
+### 2.14 Ícono del juego
+
+- **Ícono propio**, dibujado por nosotros en SVG, sin imágenes ni logos de nadie: un **balón blanco**
+  de formas gruesas (pentágono central, costuras y parches del borde) sobre fondo oscuro "noche de
+  estadio", cruzado por la **banda roja diagonal** de la camiseta peruana.
+- Se lee bien a **16 px y 32 px** (pestaña del navegador): pocas formas, gruesas y con contraste.
+- Archivos, todos del mismo diseño:
+  - `app/icon.svg`: favicon principal.
+  - `app/favicon.ico` (16, 32 y 48 px): reemplaza al de Next.js para los navegadores y servicios
+    que piden `/favicon.ico`.
+  - `app/apple-icon.png` (180 × 180, sin esquinas redondeadas: iOS pone las suyas).
+  - Íconos de **192 × 192** y **512 × 512** y uno **maskable** de 512 (con margen para la zona segura)
+    para instalar en Android.
+- **Manifiesto** (`/manifest.webmanifest`): nombre "Futbolazo", colores del tema (fondo `#050d09`) y
+  `display: standalone`. No convierte el juego en una PWA con modo sin conexión (eso sigue fuera de la fase 1).
+- `theme-color` de la página: el color del fondo, `#050d09`.
+
 ## 3. Fuera de la fase 1
 
 - **Modo diario**: un mismo jugador para todos por fecha de Lima, con número de puzzle
@@ -385,7 +405,7 @@ hacerlo se cubre lo básico:
 - Otras ligas, selecciones o jugadores históricos.
 - Otros tipos de pistas extra (foto, silueta, estadísticas) o "comprar" pistas.
 - Panel de administración web; los datos se cargan por CSV (ver `data-model.md`).
-- Notificaciones push, PWA instalable o app nativa.
+- Notificaciones push, PWA con modo sin conexión o app nativa (sí hay manifiesto e íconos, ver §2.14).
 - Monetización (anuncios, suscripciones).
 - Otros idiomas aparte del español.
 - Analítica de uso más allá de lo que dé Vercel por defecto.
@@ -484,6 +504,13 @@ hacerlo se cubre lo básico:
 - [ ] CA-72: Valores manipulados en `localStorage` (JSON inválido, tipos incorrectos, fechas imposibles, cadenas enormes) no rompen la página: se ignoran y se juega normal.
 - [ ] CA-73: No hay claves ni `.env` en el repo ni en su historial; no hay rutas API ni server actions.
 - [ ] CA-74: `npm audit` reporta 0 vulnerabilidades y `.github/dependabot.yml` revisa npm cada semana.
+
+**Ícono y textos**
+- [ ] CA-75: La pestaña muestra el ícono propio (balón y banda roja) y se reconoce a 16 px y 32 px; no aparece el favicon por defecto de Next.js.
+- [ ] CA-76: `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.png` (180 px) y los íconos de 192 y 512 px salen del mismo diseño, sin imágenes externas ni logos de nadie.
+- [ ] CA-77: El manifiesto tiene nombre "Futbolazo", `display: standalone`, `theme_color` y `background_color` del fondo, y los íconos de 192 y 512 px (uno maskable).
+- [ ] CA-78: La página tiene `theme-color` con el color del fondo; el ícono y el manifiesto cargan sin errores de CSP.
+- [ ] CA-79: El selector de nivel dice "El jugador secreto es de Universitario, Alianza Lima, Sporting Cristal, Cienciano o Melgar." (Fácil) y "El jugador secreto puede ser de cualquier club." (Normal); la leyenda dice "el jugador secreto tiene más / menos".
 
 **Calidad y publicación**
 - [ ] CA-21: `npm test`, `npm run lint` y `npm run build` pasan sin errores.
