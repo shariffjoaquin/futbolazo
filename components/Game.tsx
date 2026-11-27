@@ -4,6 +4,7 @@ import confetti from "canvas-confetti";
 import { Search } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DifficultyPicker } from "@/components/DifficultyPicker";
 import { GuessRow } from "@/components/GuessRow";
 import { HintPanel } from "@/components/HintPanel";
 import { COLUMNS, GRID_COLS, REVEAL_SECONDS } from "@/components/HintCell";
@@ -11,11 +12,12 @@ import { ResultPanel } from "@/components/ResultPanel";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { getPlayerById, players, type Player } from "@/data/players";
 import { compare } from "@/lib/compare";
+import { NIVEL_LABEL, type Nivel } from "@/lib/difficulty";
 import { resumeOrStartGame, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { computeScore } from "@/lib/score";
 import { buildShareText, MAX_GUESSES } from "@/lib/share";
-import { loadStats, recordScore, saveGame, type SavedGame } from "@/lib/storage";
+import { loadNivel, loadStats, recordScore, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
 
 const normalize = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
@@ -38,8 +40,10 @@ export default function Game() {
   const [revealing, setRevealing] = useState<string | null>(null);
   // Última pista pedida en esta sesión: solo esa entra animada.
   const [newHint, setNewHint] = useState<HintType | null>(null);
-  // Mejor puntaje y acumulado; solo cambian al terminar una partida (nunca al recargar).
-  const [stats, setStats] = useState(loadStats);
+  // Nivel elegido para las partidas nuevas; la partida en curso conserva el suyo (`game.nivel`).
+  const [nivel, setNivel] = useState<Nivel>(loadNivel);
+  // Mejor puntaje y acumulado del nivel de la partida; solo cambian al terminar una partida (nunca al recargar).
+  const [stats, setStats] = useState(() => loadStats(game.nivel));
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const reduceMotion = useReducedMotion();
 
@@ -96,7 +100,7 @@ export default function Game() {
     // El intento que termina la partida es el único que suma a los récords.
     if (player.id === target.id || next.guesses.length >= MAX_GUESSES) {
       const finalResults = [...results, compare(player, target, dateKey)];
-      setStats(recordScore(computeScore(finalResults, game.hints.length).total));
+      setStats(recordScore(computeScore(finalResults, game.hints.length).total, game.nivel));
     }
     setRevealing(player.id);
     setQuery("");
@@ -113,8 +117,21 @@ export default function Game() {
     setNewHint(type);
   }
 
+  /** Cambia el nivel elegido. Antes del primer intento vuelve a sortear; si no, vale para la próxima partida. */
+  function chooseNivel(next: Nivel) {
+    setNivel(next);
+    saveNivel(next);
+    if (!over && guesses.length === 0 && next !== game.nivel) startGame(next);
+  }
+
+  function startGame(level: Nivel) {
+    const next = startNewGame(undefined, undefined, level);
+    setGame(next);
+    setStats(loadStats(next.nivel));
+  }
+
   function playAgain() {
-    setGame(startNewGame());
+    startGame(nivel);
     setRevealing(null);
     setNewHint(null);
     setQuery("");
@@ -142,6 +159,7 @@ export default function Game() {
       targetName: target.nombre,
       url: window.location.origin + window.location.pathname,
       hintsUsed: game.hints.length,
+      nivel: game.nivel,
     });
     if (navigator.share) {
       try {
@@ -169,6 +187,12 @@ export default function Game() {
           <span>
             Intento <strong className="font-display text-lg text-foreground">{attempt}</strong> de {MAX_GUESSES}
           </span>
+          {guesses.length > 0 && (
+            <span className="rounded-full border border-white/15 px-2 py-0.5 text-xs font-semibold">
+              <span className="sr-only">Nivel </span>
+              {NIVEL_LABEL[game.nivel]}
+            </span>
+          )}
           <span className="flex gap-1" aria-hidden>
             {Array.from({ length: MAX_GUESSES }, (_, i) => (
               <span
@@ -184,6 +208,8 @@ export default function Game() {
             ))}
           </span>
         </div>
+
+        {!over && guesses.length === 0 && <DifficultyPicker value={game.nivel} onChange={chooseNivel} />}
 
         {!over && (
           <Command
@@ -239,6 +265,9 @@ export default function Game() {
               results={results}
               score={score}
               stats={stats}
+              gameNivel={game.nivel}
+              nextNivel={nivel}
+              onNivelChange={chooseNivel}
               gameKey={game.targetId + guesses.join()}
               delay={resultDelay}
               onShare={share}

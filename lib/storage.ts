@@ -1,4 +1,5 @@
 import { getPlayerById } from "../data/players";
+import { DEFAULT_NIVEL, isNivel, NIVELES, type Nivel } from "./difficulty";
 import { HINT_TYPES, MAX_HINTS, type HintType } from "./hints";
 import { RECENT_LIMIT } from "./random";
 import { addScore, EMPTY_STATS, type ScoreStats } from "./score";
@@ -8,6 +9,7 @@ const GAME_KEY = "futbolazo:v2:partida";
 const RECENT_KEY = "futbolazo:v2:recientes";
 const HELP_KEY = "futbolazo:v2:visto-ayuda";
 const SCORE_KEY = "futbolazo:v2:puntaje";
+const NIVEL_KEY = "futbolazo:v2:nivel";
 /** Claves del modo diario anterior (una por fecha). */
 const LEGACY_PREFIX = "futbolazo:v1:";
 
@@ -19,6 +21,8 @@ export interface SavedGame {
   fecha: string;
   /** Pistas pedidas con el botón de pista, en orden (máx. 2). */
   hints: HintType[];
+  /** Nivel con que se sorteó el secreto. */
+  nivel: Nivel;
 }
 
 function read(key: string): unknown {
@@ -55,7 +59,9 @@ export function loadGame(): SavedGame | null {
   const hints = Array.isArray(data.hints)
     ? [...new Set(data.hints.filter((h): h is HintType => HINT_TYPES.includes(h as HintType)))].slice(0, MAX_HINTS)
     : [];
-  return { targetId, fecha, guesses: validIds(data.guesses).slice(0, MAX_GUESSES), hints };
+  // Las partidas guardadas antes de los niveles se toman como Normal.
+  const nivel = isNivel(data.nivel) ? data.nivel : DEFAULT_NIVEL;
+  return { targetId, fecha, guesses: validIds(data.guesses).slice(0, MAX_GUESSES), hints, nivel };
 }
 
 export function saveGame(game: SavedGame): void {
@@ -88,21 +94,45 @@ export function saveHelpSeen(): void {
   write(HELP_KEY, true);
 }
 
+/** Nivel elegido para las partidas nuevas; Normal si no hay o no es válido. */
+export function loadNivel(): Nivel {
+  const nivel = read(NIVEL_KEY);
+  return isNivel(nivel) ? nivel : DEFAULT_NIVEL;
+}
+
+export function saveNivel(nivel: Nivel): void {
+  write(NIVEL_KEY, nivel);
+}
+
 const isPoints = (n: unknown): n is number => Number.isSafeInteger(n) && (n as number) >= 0;
 
-/** Mejor puntaje y total acumulado; en cero si no hay o no son válidos. */
-export function loadStats(): ScoreStats {
-  const data = read(SCORE_KEY) as Partial<Record<keyof ScoreStats, unknown>> | null;
+function parseStats(value: unknown): ScoreStats {
+  const data = value as Partial<Record<keyof ScoreStats, unknown>> | null;
   if (!data || typeof data !== "object" || !isPoints(data.mejor) || !isPoints(data.total)) return EMPTY_STATS;
   return { mejor: data.mejor, total: data.total };
 }
 
+/** Récords de todos los niveles. El formato anterior, sin niveles, cuenta como Normal. */
+function loadAllStats(): Record<Nivel, ScoreStats> {
+  const data = read(SCORE_KEY) as Record<string, unknown> | null;
+  const legacy = data && typeof data === "object" && "mejor" in data;
+  return Object.fromEntries(
+    NIVELES.map((n) => [n, parseStats(legacy ? (n === "normal" ? data : null) : data?.[n])]),
+  ) as Record<Nivel, ScoreStats>;
+}
+
+/** Mejor puntaje y total acumulado de un nivel; en cero si no hay o no son válidos. */
+export function loadStats(nivel: Nivel): ScoreStats {
+  return loadAllStats()[nivel];
+}
+
 /**
- * Suma el puntaje de una partida recién terminada y devuelve los récords nuevos.
+ * Suma el puntaje de una partida recién terminada a los récords de su nivel y los devuelve.
  * Llamarla solo con el intento que termina la partida, nunca al cargar.
  */
-export function recordScore(points: number): ScoreStats {
-  const stats = addScore(loadStats(), points);
-  write(SCORE_KEY, stats);
-  return stats;
+export function recordScore(points: number, nivel: Nivel): ScoreStats {
+  const all = loadAllStats();
+  all[nivel] = addScore(all[nivel], points);
+  write(SCORE_KEY, all);
+  return all[nivel];
 }

@@ -1,16 +1,21 @@
 import { getLimaDateKey } from "./daily";
+import { secretPool, type Nivel } from "./difficulty";
 import { addRecent, pickRandomPlayer } from "./random";
-import { loadGame, loadRecent, saveGame, saveRecent, type SavedGame } from "./storage";
+import { loadGame, loadNivel, loadRecent, saveGame, saveRecent, type SavedGame } from "./storage";
 
 /**
- * Empieza una partida con un jugador al azar que no esté entre los últimos sorteados.
+ * Empieza una partida con un jugador al azar del nivel elegido que no esté entre los últimos sorteados.
  * El jugador cuenta como reciente desde ya, aunque la partida no se termine.
  */
-export function startNewGame(rand: () => number = Math.random, date: Date = new Date()): SavedGame {
+export function startNewGame(
+  rand: () => number = Math.random,
+  date: Date = new Date(),
+  nivel: Nivel = loadNivel(),
+): SavedGame {
   const recent = loadRecent();
-  const target = pickRandomPlayer(recent, undefined, rand);
+  const target = pickRandomPlayer(recent, secretPool(nivel), rand);
   saveRecent(addRecent(recent, target.id));
-  const game: SavedGame = { targetId: target.id, guesses: [], fecha: getLimaDateKey(date), hints: [] };
+  const game: SavedGame = { targetId: target.id, guesses: [], fecha: getLimaDateKey(date), hints: [], nivel };
   saveGame(game);
   return game;
 }

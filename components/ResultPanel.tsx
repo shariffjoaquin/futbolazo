@@ -3,10 +3,12 @@
 import { RotateCcw, Share2 } from "lucide-react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { useEffect } from "react";
+import { DifficultyPicker } from "@/components/DifficultyPicker";
 import { STATUS_CLASS } from "@/components/HintCell";
 import { Button } from "@/components/ui/button";
 import type { Player } from "@/data/players";
 import type { CompareResult } from "@/lib/compare";
+import { NIVEL_LABEL, type Nivel } from "@/lib/difficulty";
 import { CATEGORY_LABEL, POSITION_LABEL } from "@/lib/labels";
 import { formatPoints, type ScoreBreakdown, type ScoreStats } from "@/lib/score";
 import { ATTRIBUTES, EMOJI, MAX_GUESSES } from "@/lib/share";
@@ -33,6 +35,9 @@ export function ResultPanel({
   results,
   score,
   stats,
+  gameNivel,
+  nextNivel,
+  onNivelChange,
   gameKey,
   delay,
   onShare,
@@ -42,8 +47,12 @@ export function ResultPanel({
   target: Player;
   results: CompareResult[];
   score: ScoreBreakdown;
-  /** Récords guardados, ya con esta partida sumada. */
+  /** Récords guardados del nivel de la partida, ya con esta partida sumada. */
   stats: ScoreStats;
+  gameNivel: Nivel;
+  /** Nivel elegido para la próxima partida. */
+  nextNivel: Nivel;
+  onNivelChange: (nivel: Nivel) => void;
   /** Identifica la partida para elegir la frase. */
   gameKey: string;
   /** Espera a que termine de voltearse la última fila. */
@@ -80,7 +89,7 @@ export function ResultPanel({
           </p>
         </div>
 
-        <ScoreCard score={score} stats={stats} delay={delay} />
+        <ScoreCard score={score} stats={stats} nivel={gameNivel} delay={delay} />
 
         <figure className="flex flex-col items-center gap-1.5">
           <figcaption className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -96,6 +105,8 @@ export function ResultPanel({
             ))}
           </div>
         </figure>
+
+        <DifficultyPicker legend="Nivel de la próxima partida" value={nextNivel} onChange={onNivelChange} className="w-full" />
 
         <div className="grid w-full gap-2.5 sm:grid-cols-2">
           <Button
@@ -122,7 +133,17 @@ export function ResultPanel({
 const pointsText = (n: number) => `${formatPoints(n)} ${n === 1 ? "punto" : "puntos"}`;
 
 /** Desglose del puntaje con el total contando hacia arriba, y los récords debajo. */
-function ScoreCard({ score, stats, delay }: { score: ScoreBreakdown; stats: ScoreStats; delay: number }) {
+function ScoreCard({
+  score,
+  stats,
+  nivel,
+  delay,
+}: {
+  score: ScoreBreakdown;
+  stats: ScoreStats;
+  nivel: Nivel;
+  delay: number;
+}) {
   return (
     <div className="w-full rounded-2xl bg-black/30 px-4 py-3 text-left">
       <p className="text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">Puntaje</p>
@@ -163,7 +184,7 @@ function ScoreCard({ score, stats, delay }: { score: ScoreBreakdown; stats: Scor
         </div>
       </dl>
       <p className="mt-2 text-center text-xs text-muted-foreground">
-        Mejor <strong className="text-foreground">{formatPoints(stats.mejor)}</strong> · Acumulado{" "}
+        En {NIVEL_LABEL[nivel]}: Mejor <strong className="text-foreground">{formatPoints(stats.mejor)}</strong> · Acumulado{" "}
         <strong className="text-foreground">{formatPoints(stats.total)}</strong>
       </p>
     </div>

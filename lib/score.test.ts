@@ -115,6 +115,14 @@ describe("computeScore al perder", () => {
   });
 });
 
+describe("el nivel no cambia el puntaje", () => {
+  it("computeScore no depende del nivel: solo de intentos y pistas", () => {
+    // La firma no recibe nivel; el mismo resultado da el mismo puntaje en Fácil y Normal.
+    expect(computeScore.length).toBe(2);
+    expect(computeScore(wonIn(4), 1).total).toBe(650);
+  });
+});
+
 describe("récords", () => {
   it("addScore guarda el mejor y acumula el total", () => {
     let stats = addScore(EMPTY_STATS, 650);

@@ -78,6 +78,16 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T41.5 Tests: ganar en cada intento con 0, 1 y 2 pistas; perder con parciales; todo gris = 0; tope 240 < 250; pistas no suman; récords; texto de compartir
   - [x] T41.6 Probado en navegador a 360 px y 1280 px
 
+- [x] T42 **Nivel de dificultad (Fácil / Normal)**
+  - [x] T42.1 `lib/difficulty.ts`: niveles, `EASY_CLUBS` (constante única) y `secretPool` con caída a Normal
+  - [x] T42.2 Sorteo del secreto según el nivel; buscador e intentos con todos los jugadores
+  - [x] T42.3 Nivel elegido en `futbolazo:v2:nivel` y `nivel` en la partida guardada (por defecto Normal)
+  - [x] T42.4 Selector accesible antes del primer intento y en la tarjeta final; sin cambios a media partida
+  - [x] T42.5 Compartir con " · Fácil" solo en Fácil
+  - [x] T42.6 Récords (mejor y acumulado) por nivel, leyendo el formato anterior como Normal
+  - [x] T42.7 Tests: sorteo por nivel, lista vacía → Normal, clubes existen, guardado del nivel, récords por nivel, compartir
+  - [x] T42.8 Probado en navegador a 360 px y 1280 px
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado

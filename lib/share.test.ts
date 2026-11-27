@@ -66,6 +66,17 @@ describe("buildShareText", () => {
     expect(text).not.toContain(b.nombre);
   });
 
+  it("en Fácil el encabezado termina con · Fácil; en Normal no menciona el nivel", () => {
+    const results = [miss(), miss(), miss(), hit()];
+    const header = (over: Partial<ShareInput>) => buildShareText(input({ results, points: 650, hintsUsed: 1, ...over })).split("\n")[0];
+    expect(header({ nivel: "facil" })).toBe("Futbolazo 🇵🇪 4/6 💡1 · 650 pts · Fácil");
+    expect(header({ nivel: "normal" })).toBe("Futbolazo 🇵🇪 4/6 💡1 · 650 pts");
+    expect(header({})).toBe("Futbolazo 🇵🇪 4/6 💡1 · 650 pts");
+    expect(buildShareText(input({ results: Array.from({ length: 6 }, miss), won: false, points: 0, nivel: "facil" })).split("\n")[0]).toBe(
+      "Futbolazo 🇵🇪 X/6 · 0 pts · Fácil",
+    );
+  });
+
   it("no agrega caracteres de formato de WhatsApp", () => {
     expect(buildShareText(input({ targetName: "Paolo Guerrero" }))).not.toMatch(/[*_~]/);
   });

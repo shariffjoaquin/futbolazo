@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerById, players } from "../data/players";
+import { EASY_CLUBS } from "./difficulty";
 import { resumeOrStartGame, startNewGame } from "./game";
 import type { HintType } from "./hints";
 import {
   loadGame,
   loadHelpSeen,
   loadRecent,
+  loadNivel,
   loadStats,
   recordScore,
   saveGame,
   saveHelpSeen,
+  saveNivel,
   saveRecent,
 } from "./storage";
 
@@ -36,8 +39,8 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("storage", () => {
   it("guarda y recupera la partida en curso", () => {
-    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"] });
-    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"] });
+    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"], nivel: "facil" });
+    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["club"], nivel: "facil" });
   });
 
   it("sin partida guardada devuelve null", () => {
@@ -68,13 +71,13 @@ describe("storage", () => {
 
   it("borra el progreso viejo del modo diario al guardar", () => {
     localStorage.setItem("futbolazo:v1:2026-11-25", JSON.stringify({ guesses: [a.id] }));
-    saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [] });
+    saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: "normal" });
     expect(localStorage.getItem("futbolazo:v1:2026-11-25")).toBeNull();
   });
 
   it("una partida guardada antes del botón de pista se carga sin pistas", () => {
     localStorage.setItem("futbolazo:v2:partida", JSON.stringify({ targetId: a.id, guesses: [b.id], fecha: "2026-11-26" }));
-    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id], fecha: "2026-11-26", hints: [] });
+    expect(loadGame()).toEqual({ targetId: a.id, guesses: [b.id], fecha: "2026-11-26", hints: [], nivel: "normal" });
   });
 
   it("descarta pistas desconocidas, repetidas o de más", () => {
@@ -103,38 +106,119 @@ describe("storage", () => {
     });
     expect(loadGame()).toBeNull();
     expect(loadRecent()).toEqual([]);
-    expect(() => saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [] })).not.toThrow();
+    expect(() => saveGame({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: "normal" })).not.toThrow();
     expect(() => saveRecent([a.id])).not.toThrow();
     expect(loadHelpSeen()).toBe(false);
     expect(() => saveHelpSeen()).not.toThrow();
-    expect(loadStats()).toEqual({ mejor: 0, total: 0 });
-    expect(recordScore(650)).toEqual({ mejor: 650, total: 650 });
+    expect(loadStats("normal")).toEqual({ mejor: 0, total: 0 });
+    expect(recordScore(650, "normal")).toEqual({ mejor: 650, total: 650 });
+    expect(loadNivel()).toBe("normal");
+    expect(() => saveNivel("facil")).not.toThrow();
     expect(players).toContainEqual(getPlayerById(resumeOrStartGame().targetId));
   });
 });
 
 describe("récords de puntaje", () => {
   it("empiezan en cero, guardan el mejor y acumulan el total", () => {
-    expect(loadStats()).toEqual({ mejor: 0, total: 0 });
-    recordScore(650);
-    recordScore(120);
-    expect(recordScore(900)).toEqual({ mejor: 900, total: 1670 });
-    expect(loadStats()).toEqual({ mejor: 900, total: 1670 });
+    expect(loadStats("normal")).toEqual({ mejor: 0, total: 0 });
+    recordScore(650, "normal");
+    recordScore(120, "normal");
+    expect(recordScore(900, "normal")).toEqual({ mejor: 900, total: 1670 });
+    expect(loadStats("normal")).toEqual({ mejor: 900, total: 1670 });
+  });
+
+  it("se guardan por separado para cada nivel", () => {
+    recordScore(650, "normal");
+    recordScore(1200, "facil");
+    recordScore(250, "facil");
+    expect(loadStats("normal")).toEqual({ mejor: 650, total: 650 });
+    expect(loadStats("facil")).toEqual({ mejor: 1200, total: 1450 });
+    expect(JSON.parse(localStorage.getItem("futbolazo:v2:puntaje")!)).toEqual({
+      facil: { mejor: 1200, total: 1450 },
+      normal: { mejor: 650, total: 650 },
+    });
+  });
+
+  it("el formato anterior, sin niveles, se lee como Normal", () => {
+    localStorage.setItem("futbolazo:v2:puntaje", JSON.stringify({ mejor: 700, total: 3000 }));
+    expect(loadStats("normal")).toEqual({ mejor: 700, total: 3000 });
+    expect(loadStats("facil")).toEqual({ mejor: 0, total: 0 });
+    expect(recordScore(400, "facil")).toEqual({ mejor: 400, total: 400 });
+    expect(loadStats("normal")).toEqual({ mejor: 700, total: 3000 });
   });
 
   it("cargar no suma: recargar una partida terminada deja los récords igual", () => {
-    recordScore(650);
-    loadStats();
+    recordScore(650, "normal");
+    loadStats("normal");
     loadGame();
-    expect(loadStats()).toEqual({ mejor: 650, total: 650 });
+    expect(loadStats("normal")).toEqual({ mejor: 650, total: 650 });
   });
 
   it("ignora récords corruptos o con valores no válidos", () => {
-    for (const raw of ["{no es json", "null", "[]", '{"mejor":-5,"total":10}', '{"mejor":"9","total":10}', '{"mejor":1.5,"total":2}', '{"mejor":10}']) {
+    for (const raw of [
+      "{no es json",
+      "null",
+      "[]",
+      '{"mejor":-5,"total":10}',
+      '{"mejor":"9","total":10}',
+      '{"mejor":1.5,"total":2}',
+      '{"mejor":10}',
+      '{"normal":{"mejor":-1,"total":0},"facil":"x"}',
+    ]) {
       localStorage.setItem("futbolazo:v2:puntaje", raw);
-      expect(loadStats()).toEqual({ mejor: 0, total: 0 });
+      expect(loadStats("normal")).toEqual({ mejor: 0, total: 0 });
+      expect(loadStats("facil")).toEqual({ mejor: 0, total: 0 });
     }
-    expect(recordScore(250)).toEqual({ mejor: 250, total: 250 });
+    expect(recordScore(250, "normal")).toEqual({ mejor: 250, total: 250 });
+  });
+});
+
+describe("nivel", () => {
+  it("por defecto es Normal y se recuerda el elegido", () => {
+    expect(loadNivel()).toBe("normal");
+    saveNivel("facil");
+    expect(loadNivel()).toBe("facil");
+    saveNivel("normal");
+    expect(loadNivel()).toBe("normal");
+  });
+
+  it("un nivel guardado no válido se toma como Normal", () => {
+    localStorage.setItem("futbolazo:v2:nivel", JSON.stringify("dificil"));
+    expect(loadNivel()).toBe("normal");
+  });
+
+  it("una partida guardada sin nivel (o con uno no válido) se carga como Normal", () => {
+    localStorage.setItem("futbolazo:v2:partida", JSON.stringify({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [] }));
+    expect(loadGame()?.nivel).toBe("normal");
+    localStorage.setItem("futbolazo:v2:partida", JSON.stringify({ targetId: a.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: 3 }));
+    expect(loadGame()?.nivel).toBe("normal");
+  });
+
+  it("la partida nueva usa el nivel elegido y lo guarda consigo", () => {
+    saveNivel("facil");
+    const game = startNewGame(() => 0, LIMA_NOON);
+    expect(game.nivel).toBe("facil");
+    expect(EASY_CLUBS).toContain(getPlayerById(game.targetId)!.club);
+    expect(loadGame()?.nivel).toBe("facil");
+  });
+
+  it("en Fácil todos los secretos son de clubes grandes; en Normal sale de cualquier club", () => {
+    const easyClubs = new Set<string>();
+    const normalClubs = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      easyClubs.add(getPlayerById(startNewGame(Math.random, LIMA_NOON, "facil").targetId)!.club);
+      normalClubs.add(getPlayerById(startNewGame(Math.random, LIMA_NOON, "normal").targetId)!.club);
+    }
+    expect([...easyClubs].every((club) => EASY_CLUBS.includes(club))).toBe(true);
+    expect([...normalClubs].some((club) => !EASY_CLUBS.includes(club))).toBe(true);
+  });
+
+  it("cambiar la preferencia no cambia el nivel de la partida guardada", () => {
+    saveNivel("facil");
+    const game = startNewGame(() => 0, LIMA_NOON);
+    saveNivel("normal");
+    expect(resumeOrStartGame()).toEqual(game);
+    expect(resumeOrStartGame().nivel).toBe("facil");
   });
 });
 
@@ -173,13 +257,13 @@ describe("partida en curso", () => {
   });
 
   it("una partida nueva empieza sin pistas", () => {
-    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["pais"] });
+    saveGame({ targetId: a.id, guesses: [b.id, c.id], fecha: "2026-11-26", hints: ["pais"], nivel: "normal" });
     expect(startNewGame(() => 0, LIMA_NOON).hints).toEqual([]);
     expect(loadGame()?.hints).toEqual([]);
   });
 
   it("una partida terminada también se retoma tal cual", () => {
-    const terminada = { targetId: a.id, guesses: [b.id, a.id], fecha: "2026-11-20", hints: [] as HintType[] };
+    const terminada = { targetId: a.id, guesses: [b.id, a.id], fecha: "2026-11-20", hints: [] as HintType[], nivel: "normal" as const };
     saveGame(terminada);
     expect(resumeOrStartGame()).toEqual(terminada);
   });

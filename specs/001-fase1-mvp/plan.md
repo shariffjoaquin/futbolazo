@@ -42,6 +42,7 @@ futbolazo/
 │   ├── compare.ts        # Comparación intento vs objetivo, cálculo de edad
 │   ├── share.ts          # Texto para compartir, MAX_GUESSES, orden de atributos
 │   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
+│   ├── difficulty.ts     # Niveles Fácil / Normal, clubes de Fácil y grupo de sorteo del secreto
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de random, game, storage, daily, compare y share
 ├── specs/
@@ -82,8 +83,10 @@ futbolazo/
     - `futbolazo:v2:partida` → `{ "targetId": string, "guesses": string[], "fecha": "YYYY-MM-DD", "hints": HintType[] }`
       (`hints` es opcional al leer: una partida guardada antes del botón de pista se carga con `[]`)
     - `futbolazo:v2:recientes` → `string[]` (máx. 10, el más reciente al final)
-    - `futbolazo:v2:puntaje` → `{ "mejor": number, "total": number }` (enteros ≥ 0; si falta o no es
-      válido, se toma `{ mejor: 0, total: 0 }`)
+    - `futbolazo:v2:nivel` → `"facil" | "normal"` (por defecto `"normal"`)
+    - `futbolazo:v2:puntaje` → `{ "normal": { mejor, total }, "facil": { mejor, total } }` (enteros ≥ 0;
+      lo que falte o no sea válido cuenta como 0; el formato viejo `{ mejor, total }` se lee como Normal)
+    - La partida guarda `nivel`; sin `nivel` se carga como `"normal"`.
     - Al cargar se descartan ids desconocidos, duplicados y lo que pase de 6 intentos. Si el
       `targetId` no existe o la fecha no es válida, la partida se descarta.
     - Al guardar se borran las claves antiguas `futbolazo:v1:*` del modo diario.
@@ -105,12 +108,25 @@ futbolazo/
     - El conteo animado usa `animate` de Motion sobre un `MotionValue`; con movimiento reducido
       (`useReducedMotion`) se pone el valor final directo. El número animado va `aria-hidden` y el
       total se lee una sola vez con texto para lectores de pantalla.
-13. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+13. **Nivel de dificultad** (`lib/difficulty.ts`, lógica pura):
+    - `EASY_CLUBS` es la única lista de clubes de Fácil. Se compara por **nombre de club** porque
+      `Player` no guarda `club_id` (el CSV sí: `universitario`, `alianza-lima`, `sporting-cristal`,
+      `cienciano`, `melgar`). Un test comprueba que cada club de la lista exista en `data/players.ts`.
+    - `secretPool(nivel, lista, clubes)` devuelve los candidatos a secreto; en Fácil filtra por club y,
+      si queda vacío, devuelve la lista completa (cae a Normal).
+    - `startNewGame` sortea con `pickRandomPlayer(recientes, secretPool(nivel))`; el nivel sale por
+      defecto de la preferencia guardada. El buscador sigue usando `players` completo.
+    - Preferencia (`nivel`) y nivel de la partida (`game.nivel`) son cosas distintas: la preferencia se
+      cambia en el selector; la partida conserva el suyo. Antes del primer intento, cambiar la
+      preferencia vuelve a sortear; en la tarjeta final solo guarda la preferencia para "Jugar otra vez".
+    - Selector como grupo de radios nativos dentro de un `fieldset` con `legend`:
+      flechas, Tab y Espacio funcionan sin código extra.
+14. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-14. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+15. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-15. **Textos de la interfaz en español** y `lang="es"`.
-16. **Sin dependencias de runtime** aparte de Next y React.
+16. **Textos de la interfaz en español** y `lang="es"`.
+17. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 

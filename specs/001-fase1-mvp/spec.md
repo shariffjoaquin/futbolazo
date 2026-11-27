@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 4 (puntaje y texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 5 (nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -24,10 +24,34 @@ que se pueda publicar y compartir.
   - Si la lista tiene 10 jugadores o menos, no se pueden excluir 10: se excluyen los más recientes
     posibles dejando siempre al menos un candidato (con N jugadores se excluyen los últimos N − 1).
 - Cada dispositivo/navegador tiene su propia secuencia: dos personas no ven necesariamente el mismo jugador.
+- El sorteo respeta el **nivel** de la partida (ver 2.1.1). La exclusión de los últimos 10 es una
+  sola lista para ambos niveles.
+
+### 2.1.1 Nivel de dificultad
+
+- Dos niveles: **Fácil** y **Normal**. Por defecto: **Normal**.
+- El nivel **solo limita de qué jugadores se sortea el jugador secreto**. El buscador y los intentos
+  usan **todos** los jugadores en ambos niveles.
+  - **Fácil**: el secreto sale solo de los clubes grandes: **Universitario, Alianza Lima, Sporting
+    Cristal, Cienciano y Melgar** (`club_id` del CSV: `universitario`, `alianza-lima`,
+    `sporting-cristal`, `cienciano`, `melgar`; no confundir Alianza Lima con Alianza Atlético).
+    La lista está en una sola constante para poder cambiarla.
+  - **Normal**: de todos los jugadores elegibles, como hasta ahora.
+  - Si la lista de Fácil no deja ningún jugador (p. ej. se cambian los clubes o los datos), el sorteo
+    **cae a Normal** sin romper el juego.
+- **Selector** Fácil / Normal, con el estilo del juego y usable con teclado (flechas, Tab, Espacio):
+  - **Antes de la primera jugada**: visible sobre el buscador mientras la partida no tiene intentos.
+    Cambiarlo ahí vuelve a sortear al secreto con el nivel nuevo (la partida aún no empezó de verdad).
+  - **Al terminar**: visible en la tarjeta final como "Nivel de la próxima partida"; se aplica al
+    pulsar "Jugar otra vez".
+  - **A media partida** (desde el primer intento hasta el final) no se puede cambiar: el selector no
+    se muestra y en su lugar se ve el nivel de la partida en curso.
+- El nivel elegido se guarda en `localStorage` y se recuerda al volver. La partida guardada incluye
+  su propio nivel; una partida guardada sin nivel (de antes de este cambio) se toma como Normal.
 
 ### 2.2 Partida en curso
 
-- La partida en curso (jugador secreto, intentos hechos, pistas pedidas y fecha en que empezó) se
+- La partida en curso (jugador secreto, nivel, intentos hechos, pistas pedidas y fecha en que empezó) se
   guarda en `localStorage` después de cada intento y de cada pista.
 - **Al recargar la página se sigue en la misma partida**, con los mismos intentos. Si ya había
   terminado, se vuelve a ver el resultado final con sus botones.
@@ -129,8 +153,10 @@ poder ajustarlas.
   reducido) y el desglose:
   - Al ganar: "Acierto en el intento N" con su base, "Pistas sin usar" con el bonus y el total.
   - Al perder: los puntos de cada categoría (con su color), "Pistas: +0 (solo al ganar)" y el total.
+- **El puntaje no cambia por nivel**: mismas reglas y mismas constantes en Fácil y Normal.
 - **Récords**: se guardan en `localStorage` el **mejor puntaje** y el **total acumulado** de todas las
-  partidas terminadas, y se muestran en la tarjeta final ("Mejor" y "Acumulado").
+  partidas terminadas, **por separado para cada nivel**, y la tarjeta final muestra los del nivel de
+  esa partida ("Mejor" y "Acumulado" en Fácil o en Normal).
   - Una partida suma **una sola vez**, al terminar (con el último intento). Recargar una partida ya
     terminada no vuelve a sumar.
   - Si `localStorage` no está disponible, el puntaje de la partida se muestra igual y los récords
@@ -141,7 +167,8 @@ poder ajustarlas.
 Texto con este formato:
 
 ```
-Futbolazo 🇵🇪 <N>/6 · <puntos> pts    (o X/6 si perdió; con " 💡<pistas>" tras el N/6 si usó pistas)
+Futbolazo 🇵🇪 <N>/6 · <puntos> pts    (o X/6 si perdió; con " 💡<pistas>" tras el N/6 si usó pistas;
+                                       con " · Fácil" al final si la partida fue en Fácil)
 
 🟩🟨⬜⬜🟩🟩
 🟩🟩🟩🟩🟩🟩
@@ -151,12 +178,14 @@ Futbolazo 🇵🇪 <N>/6 · <puntos> pts    (o X/6 si perdió; con " 💡<pistas
 <URL del juego>
 ```
 
-Ejemplo: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts`.
+Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵🇪 4/6 💡1 · 650 pts · Fácil`.
 
 - **Sin número de puzzle.**
 - **Pistas**: solo si se usaron, tras `N/6` va 💡 y el número. Sin pistas no aparece.
 - **Puntaje**: ` · <puntos> pts` al final del encabezado, con el total de la partida (en cifras, sin
   separador de miles: el máximo es 1200).
+- **Nivel**: solo cuando la partida fue en Fácil, el encabezado termina con ` · Fácil`. En Normal no
+  se menciona el nivel.
 - Una fila por intento, en orden cronológico, con un emoji por pista en el orden
   Club, País, Posición, Edad, Dorsal, Pie. 🟩 correcto, 🟨 cerca, ⬜ no. Sin flechas.
 - **Frase** debajo de la grilla, con el nombre del jugador secreto de la partida:
@@ -175,7 +204,8 @@ Ejemplo: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts`.
 
 - **No hay cuentas ni login.** Todo ocurre en el navegador.
 - En `localStorage` se guardan: la partida en curso (con sus pistas), los últimos 10 jugadores
-  sorteados, si ya se vio la ayuda, y el mejor puntaje y el total acumulado.
+  sorteados, si ya se vio la ayuda, el nivel elegido, y el mejor puntaje y el total acumulado de
+  cada nivel.
 - Si `localStorage` no está disponible (p. ej. modo privado), se juega igual, sin guardar:
   al recargar empieza una partida nueva y la exclusión de repetidos no se recuerda.
 - Datos guardados corruptos o con jugadores que ya no existen se ignoran sin romper el juego
@@ -229,6 +259,15 @@ Ejemplo: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts`.
 - [ ] CA-36: Cualquier derrota (máx. 240) puntúa menos que cualquier victoria (mín. 250).
 - [ ] CA-37: La tarjeta final muestra el desglose y el total con conteo animado; con movimiento reducido el total aparece sin animar.
 - [ ] CA-38: El mejor puntaje y el total acumulado se guardan, se muestran en la tarjeta final y no cambian al recargar una partida ya terminada.
+
+**Nivel de dificultad**
+- [ ] CA-39: En Fácil, el jugador secreto siempre es de Universitario, Alianza Lima, Sporting Cristal, Cienciano o Melgar; en Normal puede salir cualquier jugador.
+- [ ] CA-40: En ambos niveles el buscador ofrece todos los jugadores y cualquiera se puede intentar.
+- [ ] CA-41: Si la lista de clubes de Fácil no deja jugadores, el sorteo usa todos (como Normal).
+- [ ] CA-42: El nivel por defecto es Normal; el elegido se recuerda al recargar y la partida guardada conserva su nivel.
+- [ ] CA-43: El selector se ve antes del primer intento y en la tarjeta final, se usa con teclado, y no se puede cambiar el nivel de una partida con intentos (el cambio en la tarjeta final se aplica a la siguiente).
+- [ ] CA-44: El texto de compartir termina con " · Fácil" solo en partidas de Fácil.
+- [ ] CA-45: El puntaje es igual en ambos niveles, y el mejor puntaje y el acumulado se guardan y muestran por separado para cada nivel.
 
 **Intentos y pistas**
 - [ ] CA-09: Solo se pueden elegir jugadores de la lista; la búsqueda funciona sin tildes ni mayúsculas ("rondon" encuentra a "Yeferson Rondón").
