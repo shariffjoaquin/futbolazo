@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 10 (ícono propio y texto del selector de nivel; la 9 agregó seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 11 (tarjeta de resultado como imagen; la 10 agregó el ícono propio y el texto del selector de nivel; la 9 agregó seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -124,7 +124,15 @@ Ayuda opcional, aparte de las pistas de cada intento (que no cambian).
   ícono 💡, claramente distinta de una fila de intento: "Pista 1 · País: [bandera] Argentina".
   El país lleva su bandera y el club su escudo genérico. Los lectores de pantalla anuncian la pista nueva con un texto completo
   (p. ej. "Pista 1: el país es Argentina").
-- **Persistencia**: las pistas pedidas se guardan con la partida en curso y sobreviven a recargas.
+- **Tarjeta como imagen**
+- [ ] CA-80: "Compartir imagen" genera un PNG de 1080 × 1920 con fondo noche de estadio, FUTBOLAZO ("AZO" en rojo) en la fuente del juego, la franja rojo-blanco-rojo, el puntaje grande, N/6 (o X/6), la grilla de colores sin textos y "futbolazo.app".
+- [ ] CA-81: Con pistas usadas se ve una bombilla dibujada y el número; sin pistas no aparece. "FÁCIL" aparece solo en partidas de Fácil.
+- [ ] CA-82: Ganando dice "Lo adiviné al primer intento" o "Lo adiviné en N intentos"; perdiendo, "No pude adivinar al jugador". El nombre del jugador aparece fuera de retos y nunca en un reto de amigos.
+- [ ] CA-83: Todo el contenido queda dentro de los márgenes seguros (260 px arriba, 380 px abajo, 120 px a los lados); los nombres largos se achican para caber.
+- [ ] CA-84: Con `navigator.canShare({ files })` se abre el menú nativo con el PNG; si no, se descarga `futbolazo-resultado.png`. Se anuncia "Imagen lista" o "No se pudo generar la imagen".
+- [ ] CA-85: Sin Canvas o si falla la generación, el juego sigue funcionando; la CSP no se amplía y no hay errores en consola.
+
+**Persistencia**: las pistas pedidas se guardan con la partida en curso y sobreviven a recargas.
   Una partida nueva empieza sin pistas.
 
 ### 2.6 Fin de partida
@@ -205,6 +213,37 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
   (que WhatsApp toma como formato).
 - Se usa el menú nativo de compartir (`navigator.share`) cuando existe; si no existe o falla,
   se copia al portapapeles y se muestra "¡Copiado al portapapeles!". Si el usuario cancela el menú, no pasa nada.
+
+### 2.8.1 Tarjeta de resultado como imagen
+
+- En la tarjeta final, junto a "Compartir" (texto), un botón **"Compartir imagen"**.
+- Genera una imagen **PNG de 1080 × 1920** (formato Stories), dibujada en el navegador con Canvas 2D,
+  sin dependencias ni imágenes externas, en el estilo "noche de estadio":
+  - Fondo oscuro con degradado verde césped, luz de estadio arriba y franjas de césped.
+  - **FUTBOLAZO** con "AZO" en rojo, en la fuente de títulos del juego (Barlow Condensed), y la franja
+    rojo-blanco-rojo debajo. Antes de dibujar se esperan las fuentes (`document.fonts`).
+  - El **puntaje en grande** ("650 PTS") y una línea con **"4/6"** (o "X/6"), la **pista** si se
+    usaron (una bombilla dibujada como forma simple y el número, sin emoji, para que se vea igual en
+    todos lados) y **"FÁCIL"** si la partida fue en Fácil.
+  - La frase y el jugador:
+    - Gana en 1 intento: "Lo adiviné al primer intento"; en 2 a 6: "Lo adiviné en N intentos".
+    - Pierde: "No pude adivinar al jugador".
+    - Debajo, el **nombre del jugador secreto**, salvo en un **reto de amigos**: ahí no se nombra
+      (misma regla que el texto) y en su lugar dice "Reto de amigos".
+  - La **grilla de cuadraditos** de los intentos (verde, amarillo, gris), sin textos de las pistas.
+  - Abajo, **"futbolazo.app"**.
+- **Márgenes seguros** para que no lo tapen los textos y botones de Instagram Stories y TikTok:
+  260 px arriba, 380 px abajo y 120 px a los lados. Todo el contenido queda dentro; fuera solo hay fondo.
+- **Compartir**: si el navegador puede compartir archivos (`navigator.canShare({ files })`), se abre el
+  menú nativo con el PNG. Si no (o si el navegador no deja abrirlo), se **descarga** como
+  `futbolazo-resultado.png`. Si el usuario cancela el menú, no pasa nada.
+- **Mensajes de estado** accesibles (`role="status"`): "Imagen lista" al compartir o descargar,
+  "No se pudo generar la imagen" si falla. Mientras se genera, el botón dice "Generando…" y no se
+  puede pulsar dos veces.
+- La imagen se prepara cuando aparece la tarjeta final, para que al pulsar el botón el menú se abra
+  enseguida (algunos navegadores no dejan compartir si pasa mucho tiempo desde el toque).
+- No hay animación (respeta el movimiento reducido). Si Canvas no está disponible o falla, solo se
+  muestra el mensaje de error: el juego sigue igual.
 
 ### 2.9 Sin login y persistencia
 

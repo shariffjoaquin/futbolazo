@@ -3,7 +3,7 @@
 import confetti from "canvas-confetti";
 import { Search, Users } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { DifficultyPicker } from "@/components/DifficultyPicker";
 import { GuessRow } from "@/components/GuessRow";
 import { HintPanel } from "@/components/HintPanel";
@@ -20,6 +20,7 @@ import { bootGame, resumeOrStartNormal, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { computeScore } from "@/lib/score";
 import { MAX_QUERY_LENGTH, searchPlayers } from "@/lib/search";
+import { createShareImage, downloadBlob, SHARE_IMAGE_FILENAME, shareCardContent } from "@/lib/shareImage";
 import { buildShareText, CHALLENGE_LINE, MAX_GUESSES } from "@/lib/share";
 import { feedbackPolicy, planGuess, planHint, type FeedbackPlan } from "@/lib/sounds";
 import { loadNivel, loadStats, recordScore, saveChallenge, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
@@ -63,6 +64,9 @@ export default function Game() {
   // Mejor puntaje y acumulado del nivel de la partida; solo cambian al terminar una partida (nunca al recargar).
   const [stats, setStats] = useState(() => loadStats(game.nivel));
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Imagen de la tarjeta final, preparada de antemano para que el menú de compartir abra enseguida.
+  const shareImageCache = useRef<{ key: string; blob: Promise<Blob> } | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
   const reduceMotion = useReducedMotion();
 
   // Las edades se calculan a la fecha en que empezó la partida.
@@ -107,6 +111,67 @@ export default function Game() {
     const t = setTimeout(fireConfetti, resultDelay * 1000);
     return () => clearTimeout(t);
   }, [won, justEnded, resultDelay]);
+
+  // Identifica el resultado que va en la imagen.
+  const imageKey = score
+    ? [challengeCode ?? "", game.targetId, game.fecha, guesses.join(), game.hints.length].join("|")
+    : null;
+
+  /** PNG de la tarjeta final; se genera una vez por partida (si falla, se reintenta al pedirla otra vez). */
+  function resultImage(): Promise<Blob> {
+    if (!score || !imageKey) return Promise.reject(new Error("La partida no terminó"));
+    if (shareImageCache.current?.key !== imageKey) {
+      const content = shareCardContent({
+        results,
+        won,
+        points: score.total,
+        targetName: target.nombre,
+        hintsUsed: game.hints.length,
+        nivel: game.nivel,
+        challenge: !!challengeCode,
+      });
+      const blob = createShareImage(content);
+      blob.catch(() => {
+        if (shareImageCache.current?.blob === blob) shareImageCache.current = null;
+      });
+      shareImageCache.current = { key: imageKey, blob };
+    }
+    return shareImageCache.current.blob;
+  }
+
+  const prepareImage = useEffectEvent(() => void resultImage().catch(() => {}));
+
+  // Al aparecer la tarjeta final se prepara la imagen, sin trabar la animación del resultado.
+  useEffect(() => {
+    if (!imageKey) return;
+    const t = setTimeout(prepareImage, (resultDelay + 1) * 1000);
+    return () => clearTimeout(t);
+  }, [imageKey, resultDelay]);
+
+  async function shareImage() {
+    if (imageBusy) return;
+    setImageBusy(true);
+    try {
+      const blob = await resultImage();
+      const file = new File([blob], SHARE_IMAGE_FILENAME, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          showToast("Imagen lista");
+          return;
+        } catch (err) {
+          if ((err as DOMException).name === "AbortError") return;
+          // El navegador no dejó abrir el menú (p. ej. pasó mucho tiempo desde el toque): se descarga.
+        }
+      }
+      downloadBlob(blob, SHARE_IMAGE_FILENAME);
+      showToast("Imagen lista");
+    } catch {
+      showToast("No se pudo generar la imagen");
+    } finally {
+      setImageBusy(false);
+    }
+  }
 
   function showToast(message: string) {
     setToast(message);
@@ -346,6 +411,8 @@ export default function Game() {
               gameKey={game.targetId + guesses.join()}
               delay={resultDelay}
               onShare={share}
+              onShareImage={shareImage}
+              imageBusy={imageBusy}
               onPlayAgain={playAgain}
             />
           )}

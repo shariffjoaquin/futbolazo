@@ -51,6 +51,7 @@ futbolazo/
 │   ├── crests.ts         # Escudos genéricos de los clubes (colores, sigla, diseño) y contraste
 │   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
 │   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
+│   ├── shareImage.ts     # Tarjeta de resultado en PNG: contenido y diseño (puros) + dibujo en Canvas
 │   ├── search.ts         # Búsqueda de jugadores sin tildes, con largo máximo (40)
 │   ├── brandIcon.ts      # SVG del ícono (balón y banda roja) y colores; fuente de todos los íconos
 │   ├── securityHeaders.ts # CSP y cabeceras de seguridad (las aplica next.config.ts)
@@ -217,12 +218,35 @@ futbolazo/
       `<link>`); `theme_color` y `background_color` salen de `ICON_COLORS.night`, el mismo valor que
       `themeColor` del layout y `--stadium-night`.
     - La CSP no cambia: íconos y manifiesto son del propio sitio (`img-src 'self'`, `default-src 'self'`).
-18. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+18. **Tarjeta de resultado como imagen** (spec §2.8.1; sin dependencias):
+    - `lib/shareImage.ts` en tres capas:
+      1. `shareCardContent(...)` (pura): qué se muestra (frase, nombre o "Reto de amigos", N/6,
+         puntaje, pistas, nivel, filas de colores). La regla del nombre es la misma del texto.
+      2. `layoutShareCard(content)` (pura): lista de operaciones de dibujo con posiciones, tamaños,
+         fuentes y colores en la caja de 1080 × 1920. Los tests comprueban que todo queda dentro de los
+         márgenes seguros (260 arriba, 380 abajo, 120 a los lados) y que los bloques no se pisan; la
+         grilla usa celdas de 56 px y se centra en el espacio de 6 filas.
+      3. `drawShareCard(ctx, ops, fonts)` dibuja en un `CanvasRenderingContext2D` (se prueba con un
+         contexto simulado) y `createShareImage(...)` arma el canvas, espera las fuentes y devuelve
+         el `Blob` PNG. Los textos con ancho máximo se achican hasta caber (`measureText`).
+    - **Fuentes**: se leen las familias de `--font-display` y `--font-sans` (las de `next/font`) y se
+      cargan con `document.fonts.load` en el peso y estilo exactos antes de dibujar; luego
+      `document.fonts.ready`.
+    - **Sin emoji en el canvas**: la pista es una bombilla dibujada (círculo, cuello y base).
+    - **Compartir**: `navigator.canShare({ files: [png] })` → `navigator.share({ files })`; si no se
+      puede o el navegador lo rechaza (`NotAllowedError`), se descarga con un `<a download>` y un
+      `blob:` temporal que se libera enseguida. Cancelar (`AbortError`) no hace nada.
+    - **CSP sin cambios**: la imagen no se muestra en la página, solo se comparte como archivo o se
+      descarga, así que no hace falta `img-src blob:` ni `data:`.
+    - **Pre-generación**: al aparecer la tarjeta final se genera la imagen en segundo plano y se
+      guarda; el clic la comparte sin esperar, dentro del gesto del usuario (Safari rechaza
+      `navigator.share` si pasa demasiado tiempo). Si aún no está, se genera al pulsar.
+19. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-19. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+20. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-20. **Textos de la interfaz en español** y `lang="es"`.
-21. **Sin dependencias de runtime** aparte de Next y React.
+21. **Textos de la interfaz en español** y `lang="es"`.
+22. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 

@@ -171,5 +171,14 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T47.6 Navegador: pestaña a 16 y 32 px, manifiesto e íconos cargan, sin errores de CSP
 - [x] T48 **Texto "el jugador secreto"** en el selector de nivel y en la leyenda de colores
 
+## Tarjeta como imagen
+- [ ] T49 **Compartir imagen** (spec §2.8.1, plan decisión 18)
+  - [x] T49.1 `lib/shareImage.ts`: `shareCardContent` y `layoutShareCard` (puros) con tests (cada tipo de resultado, regla del nombre en retos, texto de intentos, márgenes seguros)
+  - [x] T49.2 `drawShareCard` y `createShareImage` (Canvas 2D, fuentes del juego, bombilla dibujada), con test de contexto simulado
+  - [x] T49.3 Botón "Compartir imagen" en la tarjeta final; compartir archivo o descargar `futbolazo-resultado.png`; mensajes "Imagen lista" / "No se pudo generar la imagen"
+  - [x] T49.4 Pre-generar la imagen al aparecer la tarjeta final
+  - [x] T49.5 Navegador a 360 y 1280 px: generar, abrir y revisar la imagen (ganar, perder, reto, Fácil con pistas); sin errores de CSP
+  - [ ] T49.6 Menú de compartir en celular real (lo prueba el usuario)
+
 ## Futuro (fuera de la fase 1)
 - [ ] F01 **Modo diario**: exponer `lib/daily.ts` como modo aparte, con su guardado, número de puzzle y `puzzles_diarios` en Supabase

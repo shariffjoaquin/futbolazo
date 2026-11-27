@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Share2 } from "lucide-react";
+import { ImageDown, RotateCcw, Share2 } from "lucide-react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 import { DifficultyPicker } from "@/components/DifficultyPicker";
@@ -42,6 +42,8 @@ export function ResultPanel({
   gameKey,
   delay,
   onShare,
+  onShareImage,
+  imageBusy,
   onPlayAgain,
 }: {
   won: boolean;
@@ -61,6 +63,10 @@ export function ResultPanel({
   /** Espera a que termine de voltearse la última fila. */
   delay: number;
   onShare: () => void;
+  /** Comparte (o descarga) la tarjeta como imagen PNG. */
+  onShareImage: () => void;
+  /** La imagen se está generando: el botón no se puede volver a pulsar. */
+  imageBusy: boolean;
   onPlayAgain: () => void;
 }) {
   const headline = won ? "¡Golazo!" : pick(LOSS_LINES, gameKey);
@@ -120,9 +126,19 @@ export function ResultPanel({
             Compartir
           </Button>
           <Button
+            onClick={onShareImage}
+            disabled={imageBusy}
+            aria-busy={imageBusy}
+            variant="outline"
+            className="h-14 rounded-2xl border-2 border-brand-red bg-transparent font-display text-xl font-bold tracking-wide uppercase hover:bg-brand-red/15 dark:border-brand-red dark:bg-transparent dark:hover:bg-brand-red/15"
+          >
+            <ImageDown className="size-5" />
+            {imageBusy ? "Generando…" : "Compartir imagen"}
+          </Button>
+          <Button
             onClick={onPlayAgain}
             variant="outline"
-            className="h-14 rounded-2xl border-2 border-white bg-white font-display text-xl font-bold tracking-wide text-background uppercase hover:bg-white/85 hover:text-background dark:border-white dark:bg-white dark:hover:bg-white/85"
+            className="h-14 rounded-2xl border-2 border-white bg-white sm:col-span-2 font-display text-xl font-bold tracking-wide text-background uppercase hover:bg-white/85 hover:text-background dark:border-white dark:bg-white dark:hover:bg-white/85"
           >
             <RotateCcw className="size-5" />
             Jugar otra vez
