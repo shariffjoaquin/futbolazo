@@ -62,6 +62,9 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
   tiene **más** (es mayor o lleva un número más alto); ↓ significa que tiene **menos**.
 - **Edad**: años cumplidos a la **fecha de Lima en que empezó la partida**. Así una partida
   guardada que se retoma otro día muestra las mismas edades que al empezar.
+- **País con bandera**: la celda de País muestra una bandera estilizada (SVG propio, sin emojis ni
+  imágenes externas) con el nombre del país en pequeño debajo. Si un país no tiene bandera definida,
+  se muestra solo el nombre. El color de fondo de la celda sigue siendo el de la pista.
 - Los intentos se muestran del más reciente al más antiguo; los huecos que quedan se ven como filas vacías.
 - Una leyenda bajo el tablero explica colores y flechas.
 

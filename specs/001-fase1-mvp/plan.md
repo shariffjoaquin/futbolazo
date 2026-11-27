@@ -125,6 +125,12 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
   Se abre solo la primera vez que se visita (se recuerda en `localStorage`, `futbolazo:v2:visto-ayuda`).
 - **Movimiento reducido**: con `prefers-reduced-motion` no hay volteo, rebote ni confeti
   (`MotionConfig reducedMotion="user"` y comprobación antes del confeti).
+- **Banderas** (`lib/flags.ts` + `components/Flag.tsx`): una por cada país de la lista cerrada del
+  importador, dibujadas como formas SVG simples en proporción 3:2, colores planos, esquinas redondeadas
+  y un borde oscuro fino para que se distingan sobre las celdas verde, amarilla y gris. Escudos y
+  emblemas simplificados a una figura geométrica (círculo, estrella, rectángulo). Los datos de cada
+  bandera son una lista de figuras sin React, así un test comprueba que no falte ninguna. Sin bandera
+  definida, la celda muestra solo el texto.
 - **Restricción legal**: **sin escudos, logos, fotos ni imágenes oficiales** de clubes o jugadores.
   Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "motion/react";
+import { Flag } from "@/components/Flag";
+import { getFlag } from "@/lib/flags";
 import { cn } from "@/lib/utils";
 import type { Player } from "@/data/players";
 import type { AttrResult } from "@/lib/compare";
@@ -52,12 +54,15 @@ export function HintCell({
   result,
   animate = false,
   delay = 0,
+  country,
 }: {
   label: string;
   value: string;
   result: AttrResult;
   animate?: boolean;
   delay?: number;
+  /** Si se indica y tiene bandera, la celda muestra la bandera con el nombre pequeño debajo. */
+  country?: string;
 }) {
   const arrow = result.arrow === "up" ? "↑" : result.arrow === "down" ? "↓" : "";
   const spoken = `${label}: ${value}, ${STATUS_TEXT[result.status]}${result.arrow ? `, ${ARROW_TEXT[result.arrow]}` : ""}`;
@@ -73,10 +78,19 @@ export function HintCell({
         STATUS_CLASS[result.status],
       )}
     >
-      <span className={cn("max-w-full [overflow-wrap:anywhere]", sizeFor(value))}>
-        {value}
-        {arrow && <span className="ml-0.5 text-sm sm:text-lg">{arrow}</span>}
-      </span>
+      {country && getFlag(country) ? (
+        <span className="flex max-w-full flex-col items-center gap-1">
+          <Flag country={country} className="w-7 sm:w-9" />
+          <span className={cn("max-w-full leading-none", value.length > 7 ? "text-[10.5px]" : "text-[11.5px]", "sm:text-[13px]")}>
+            {value}
+          </span>
+        </span>
+      ) : (
+        <span className={cn("max-w-full [overflow-wrap:anywhere]", sizeFor(value))}>
+          {value}
+          {arrow && <span className="ml-0.5 text-sm sm:text-lg">{arrow}</span>}
+        </span>
+      )}
     </motion.div>
   );
 }

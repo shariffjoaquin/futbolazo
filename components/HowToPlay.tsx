@@ -59,7 +59,13 @@ export default function HowToPlay() {
           </div>
           <div className={GRID_COLS}>
             {EXAMPLE.map((c, i) => (
-              <HintCell key={COLUMNS[i]} label={COLUMNS[i]} value={c.value} result={c.r} />
+              <HintCell
+                key={COLUMNS[i]}
+                label={COLUMNS[i]}
+                value={c.value}
+                result={c.r}
+                country={COLUMNS[i] === "País" ? c.value : undefined}
+              />
             ))}
           </div>
           <figcaption className="text-xs text-muted-foreground">Ejemplo con un jugador inventado.</figcaption>

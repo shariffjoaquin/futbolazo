@@ -51,6 +51,7 @@ export function GuessRow({
             result={c.r}
             animate={animate}
             delay={animate ? i * FLIP_STAGGER : 0}
+            country={COLUMNS[i] === "País" ? player.nacionalidad : undefined}
           />
         ))}
       </div>

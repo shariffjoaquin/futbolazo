@@ -54,6 +54,13 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T22.10 Probado con Playwright en Chromium emulando 390 px, 360 px y escritorio 1280 px
   - [ ] T22.11 Revisar en celulares reales (iOS Safari y Android Chrome), incluido el menú nativo de compartir
 
+- [x] T39 **Banderas en la columna País**
+  - [x] T39.1 Banderas estilizadas en SVG propio para los 14 países de la lista (`lib/flags.ts`)
+  - [x] T39.2 Componente `Flag` y celda de País con bandera + nombre pequeño; solo texto si falta la bandera
+  - [x] T39.3 Bandera en el ejemplo del diálogo "¿Cómo se juega?"
+  - [x] T39.4 Test: cada país de la lista tiene bandera
+  - [x] T39.5 Probado en navegador a 360 px y 1280 px
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado
