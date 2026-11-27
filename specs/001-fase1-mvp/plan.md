@@ -44,6 +44,7 @@ futbolazo/
 │   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
 │   ├── difficulty.ts     # Niveles Fácil / Normal, clubes de Fácil y grupo de sorteo del secreto
 │   ├── challenge.ts      # Reto de amigos: código del link (codificar, decodificar, validar) e invitación
+│   ├── crests.ts         # Escudos genéricos de los clubes (colores, sigla, diseño) y contraste
 │   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
 │   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
@@ -215,8 +216,16 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
 - **Puntaje en la tarjeta final**: bloque "Puntaje" entre el jugador revelado y la grilla de emojis:
   total grande en Barlow Condensed con conteo, desglose en filas (al perder, una casilla por
   categoría con el color de su mejor resultado) y una línea "Mejor · Acumulado" debajo.
-- **Restricción legal**: **sin escudos, logos, fotos ni imágenes oficiales** de clubes o jugadores.
-  Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
+- **Escudos genéricos** (`lib/crests.ts` + `components/Crest.tsx`), como las banderas: datos puros
+  (sigla, color principal, secundario y diseño `jefe` / `borde` / `punta`) y un componente que los
+  dibuja en una caja de 24 × 28 con la misma forma para todos, recortada con `clipPath`, la sigla en
+  Barlow Condensed y un borde oscuro fino. El color de la sigla (blanco o casi negro) se elige por
+  contraste. Los tests comprueban que no falte ningún club, que no haya colores ni siglas repetidos y
+  el contraste de la sigla. En la celda van con el nombre en pequeño debajo (como País).
+- **Restricción legal**: **sin escudos oficiales, logos, fotos ni imágenes oficiales** de clubes o
+  jugadores. Todo con texto, color y formas propias (la "marca" es tipografía + franja roja y blanca).
+  Los escudos de los clubes son **insignias genéricas propias** (forma común, dos colores y sigla), sin
+  ningún símbolo ni diseño de los escudos oficiales.
 
 ## 5. Plan para lo pendiente
 

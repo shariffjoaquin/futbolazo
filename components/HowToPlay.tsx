@@ -65,6 +65,7 @@ export default function HowToPlay() {
                 value={c.value}
                 result={c.r}
                 country={COLUMNS[i] === "País" ? c.value : undefined}
+                club={COLUMNS[i] === "Club" ? c.value : undefined}
               />
             ))}
           </div>

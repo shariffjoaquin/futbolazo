@@ -86,6 +86,7 @@ export default function Game() {
     type,
     text: describeHint(type, target, dateKey),
     country: type === "pais" ? target.nacionalidad : undefined,
+    club: type === "club" ? target.club : undefined,
   }));
   const justEnded = over && revealing !== null && guesses.at(-1) === revealing;
   const animateRows = !reduceMotion;

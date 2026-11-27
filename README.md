@@ -20,6 +20,7 @@ npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2
 - `lib/score.ts` — puntaje de la partida (constantes ajustables) y récords
 - `lib/difficulty.ts` — niveles Fácil / Normal y clubes de Fácil (`EASY_CLUBS`)
 - `lib/challenge.ts` — reto de amigos: código del link `/?reto=` e invitación
+- `lib/crests.ts` — escudos genéricos de los clubes (colores y sigla); los dibuja `components/Crest.tsx`
 - `lib/sounds.ts` — qué sonido y vibración corresponde a cada evento (lógica pura)
 - `lib/audio.ts` — motor Web Audio y vibración; ajuste de sonido
 - `components/DifficultyPicker.tsx` — selector de nivel

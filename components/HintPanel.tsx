@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { Crest } from "@/components/Crest";
 import { Flag } from "@/components/Flag";
 import { Button } from "@/components/ui/button";
 import type { HintButtonState, HintText, HintType } from "@/lib/hints";
@@ -17,7 +18,7 @@ export function HintPanel({
   animateType,
 }: {
   state: HintButtonState;
-  hints: { type: HintType; text: HintText; country?: string }[];
+  hints: { type: HintType; text: HintText; country?: string; club?: string }[];
   onRequest: () => void;
   /** Pista recién pedida: solo esa entra animada. */
   animateType: HintType | null;
@@ -46,7 +47,7 @@ export function HintPanel({
         </div>
       )}
       <ul aria-live="polite" className="flex flex-col gap-2">
-        {hints.map(({ type, text, country }, i) => (
+        {hints.map(({ type, text, country, club }, i) => (
           <motion.li
             key={type}
             initial={animateType === type ? { opacity: 0, y: -10, scale: 0.95 } : false}
@@ -66,6 +67,7 @@ export function HintPanel({
               </span>
               <span className="flex items-center gap-2 font-display text-xl leading-tight font-bold">
                 {country && <Flag country={country} className="w-7" />}
+                {club && <Crest club={club} className="w-6" />}
                 <span className="truncate">{text.value}</span>
               </span>
             </div>

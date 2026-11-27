@@ -76,7 +76,7 @@ La tabla `puzzles_diarios` queda diseñada para el **modo diario futuro** y no s
 | `id` | `text` PK | slug, p. ej. `universitario` |
 | `nombre` | `text` not null | nombre visible: "Universitario" |
 | `nombre_corto` | `text` | para celdas pequeñas: "U" / "UNI" |
-| `escudo_url` | `text` | opcional, para el rediseño |
+| `escudo_url` | `text` | **no se usa**: los escudos son insignias genéricas en SVG propio, definidas en `lib/crests.ts` (sin imágenes ni escudos oficiales) |
 | `creado_en` | `timestamptz` default `now()` | |
 
 #### `jugadores`

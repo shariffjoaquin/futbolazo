@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 7 (sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 8 (escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -89,6 +89,9 @@ Cada intento muestra una fila con seis celdas, comparando el intento contra el j
 - **País con bandera**: la celda de País muestra una bandera estilizada (SVG propio, sin emojis ni
   imágenes externas) con el nombre del país en pequeño debajo. Si un país no tiene bandera definida,
   se muestra solo el nombre. El color de fondo de la celda sigue siendo el de la pista.
+- **Club con escudo genérico**: la celda de Club muestra un escudo genérico del club (ver 2.12) con
+  el nombre en pequeño debajo, igual que la bandera en País. Si un club no tiene escudo definido, se
+  muestra solo el nombre.
 - Los intentos se muestran del más reciente al más antiguo; los huecos que quedan se ven como filas vacías.
 - Una leyenda bajo el tablero explica colores y flechas.
 
@@ -116,7 +119,7 @@ Ayuda opcional, aparte de las pistas de cada intento (que no cambian).
   - Partida terminada: queda deshabilitado.
 - **Cómo se muestra**: cada pista es una **fila especial** sobre el tablero, con borde dorado e
   ícono 💡, claramente distinta de una fila de intento: "Pista 1 · País: [bandera] Argentina".
-  El país lleva su bandera. Los lectores de pantalla anuncian la pista nueva con un texto completo
+  El país lleva su bandera y el club su escudo genérico. Los lectores de pantalla anuncian la pista nueva con un texto completo
   (p. ej. "Pista 1: el país es Argentina").
 - **Persistencia**: las pistas pedidas se guardan con la partida en curso y sobreviven a recargas.
   Una partida nueva empieza sin pistas.
@@ -303,6 +306,51 @@ Efectos cortos generados en el navegador (Web Audio API), **sin archivos de audi
   una partida ya jugada, ni al abrir un reto ya terminado.
 - Silenciado: ningún sonido ni vibración.
 
+### 2.12 Escudos genéricos de los clubes
+
+Insignias **propias y genéricas**, no los escudos oficiales.
+
+- Cada club tiene la **misma forma de escudo** (arriba recto con esquinas suaves, abajo en punta),
+  sus **dos colores principales** y una **sigla de 1 a 3 letras o números**. El color secundario va
+  en uno de tres diseños genéricos: franja arriba, borde interior o punta inferior.
+- **No calcan ni imitan los escudos oficiales**: nada de animales, balones, estrellas, letras
+  estilizadas ni otros símbolos propios de cada club.
+- Mismo estilo que las banderas: formas simples, colores planos y un borde oscuro fino que lo separa
+  de las celdas verde, amarilla y gris.
+- **Decorativo**: el nombre del club siempre va en texto y el escudo no se lee en voz alta
+  (`aria-hidden`).
+- **Dónde**: en la celda de Club de cada intento, en la fila de pista de club y en el ejemplo de
+  "¿Cómo se juega?". **No en el buscador**: mostraría el club de cada candidato antes de elegirlo
+  (cambia la dificultad) y, como el nombre del club debe ir siempre en texto, habría que agregarlo
+  también a cada sugerencia.
+- Sin animación propia: se voltea con su celda (sin volteo con movimiento reducido).
+- Colores y siglas propuestos (a revisar por el dueño del producto; los de confianza baja son una
+  suposición razonable, no un dato verificado):
+
+  | Club | Sigla | Color principal | Color secundario | Diseño | Confianza |
+  |---|---|---|---|---|---|
+  | ADT | ADT | celeste `#4fb3e8` | azul marino `#14245a` | borde | baja |
+  | Alianza Atlético | AA | blanco `#f5f5f0` | azul `#1f5fbf` | franja arriba | media |
+  | Alianza Lima | AL | azul marino `#14245a` | blanco `#f5f5f0` | borde | alta |
+  | Atlético Grau | AG | blanco `#f5f5f0` | negro `#16181a` | punta | baja |
+  | Cienciano | CIE | rojo `#c8102e` | blanco `#f5f5f0` | franja arriba | alta |
+  | Comerciantes Unidos | CU | verde `#187a42` | blanco `#f5f5f0` | borde | baja |
+  | Cusco FC | CFC | dorado `#d4a017` | negro `#16181a` | franja arriba | baja |
+  | Deportivo Garcilaso | DG | blanco `#f5f5f0` | celeste `#4fb3e8` | borde | media |
+  | Deportivo Moquegua | DM | naranja `#e8711a` | blanco `#f5f5f0` | punta | baja |
+  | FC Cajamarca | FCC | morado `#5b2a86` | blanco `#f5f5f0` | franja arriba | baja |
+  | Juan Pablo II College | JP2 | amarillo `#f2c230` | azul marino `#14245a` | punta | baja |
+  | Los Chankas | CH | negro `#16181a` | verde `#2fa35a` | franja arriba | baja |
+  | Melgar | FBC | rojo `#c8102e` | negro `#16181a` | punta | alta |
+  | Sport Boys | SB | rosado `#f49ac1` | negro `#16181a` | borde | alta |
+  | Sport Huancayo | SH | blanco `#f5f5f0` | rojo `#c8102e` | franja arriba | media |
+  | Sporting Cristal | SC | celeste `#4fb3e8` | blanco `#f5f5f0` | franja arriba | alta |
+  | UTC | UTC | azul `#1f5fbf` | blanco `#f5f5f0` | punta | baja |
+  | Universitario | U | crema `#f1e2c4` | granate `#8b1e2d` | borde | alta |
+
+  - Cuando dos clubes comparten colores reales (Cienciano y Sport Huancayo, rojo y blanco), se
+    invierte el orden o cambia el diseño para que no se confundan.
+
 ## 3. Fuera de la fase 1
 
 - **Modo diario**: un mismo jugador para todos por fecha de Lima, con número de puzzle
@@ -381,6 +429,13 @@ Efectos cortos generados en el navegador (Web Audio API), **sin archivos de audi
 - [ ] CA-60: El ajuste se recuerda al recargar; por defecto el sonido está activado a volumen bajo.
 - [ ] CA-61: Con movimiento reducido y el ajuste por defecto no hay vibración ni tick de volteo; si el usuario activa el sonido explícitamente, sí.
 - [ ] CA-62: El audio solo se crea o reanuda tras un gesto del usuario; al cargar la página no suena nada ni hay errores en consola.
+
+**Escudos genéricos**
+- [ ] CA-63: Cada club de los datos tiene un escudo genérico con dos colores y una sigla de 1 a 3 caracteres, sin símbolos de los escudos oficiales.
+- [ ] CA-64: No hay dos clubes con los mismos colores, ni siglas repetidas; la sigla contrasta con su campo (≥ 4,5:1).
+- [ ] CA-65: La celda de Club y la fila de pista de club muestran el escudo y el nombre en texto; un club sin escudo muestra solo el texto.
+- [ ] CA-66: El escudo es decorativo (`aria-hidden`); los lectores de pantalla leen solo el nombre del club.
+- [ ] CA-67: Se ve bien a 360 px sobre celdas verde, amarilla y gris, sin cortar el nombre ni causar scroll horizontal.
 
 **Intentos y pistas**
 - [ ] CA-09: Solo se pueden elegir jugadores de la lista; la búsqueda funciona sin tildes ni mayúsculas ("rondon" encuentra a "Yeferson Rondón").

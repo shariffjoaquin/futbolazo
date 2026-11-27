@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
+import { Crest } from "@/components/Crest";
 import { Flag } from "@/components/Flag";
+import { getCrest } from "@/lib/crests";
 import { getFlag } from "@/lib/flags";
 import { cn } from "@/lib/utils";
 import type { AttrResult } from "@/lib/compare";
@@ -44,6 +46,7 @@ export function HintCell({
   animate = false,
   delay = 0,
   country,
+  club,
 }: {
   label: string;
   value: string;
@@ -52,7 +55,16 @@ export function HintCell({
   delay?: number;
   /** Si se indica y tiene bandera, la celda muestra la bandera con el nombre pequeño debajo. */
   country?: string;
+  /** Si se indica y tiene escudo, la celda muestra el escudo genérico con el nombre pequeño debajo. */
+  club?: string;
 }) {
+  // Bandera o escudo: decorativos (aria-hidden); el nombre siempre va en texto.
+  const badge =
+    country && getFlag(country) ? (
+      <Flag country={country} className="w-7 sm:w-9" />
+    ) : club && getCrest(club) ? (
+      <Crest club={club} className="w-6 sm:w-7" />
+    ) : null;
   const arrow = result.arrow === "up" ? "↑" : result.arrow === "down" ? "↓" : "";
   const spoken = `${label}: ${value}, ${STATUS_TEXT[result.status]}${result.arrow ? `, ${ARROW_TEXT[result.arrow]}` : ""}`;
   return (
@@ -67,10 +79,16 @@ export function HintCell({
         STATUS_CLASS[result.status],
       )}
     >
-      {country && getFlag(country) ? (
+      {badge ? (
         <span className="flex max-w-full flex-col items-center gap-1">
-          <Flag country={country} className="w-7 sm:w-9" />
-          <span className={cn("max-w-full leading-none", value.length > 7 ? "text-[10.5px]" : "text-[11.5px]", "sm:text-[13px]")}>
+          {badge}
+          <span
+            className={cn(
+              "max-w-full leading-none [overflow-wrap:anywhere]",
+              value.length > 7 ? "text-[10.5px]" : "text-[11.5px]",
+              "sm:text-[13px]",
+            )}
+          >
             {value}
           </span>
         </span>

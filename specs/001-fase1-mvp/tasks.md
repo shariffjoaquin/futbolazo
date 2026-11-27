@@ -50,7 +50,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T22.6 Pantalla final con resultado en emojis y botones grandes
   - [x] T22.7 Diálogo "¿Cómo se juega?" con ejemplos de pistas (se abre solo la primera vez)
   - [x] T22.8 `prefers-reduced-motion` y contraste AA (mínimo 5,2:1 en texto normal)
-  - [x] T22.9 Sin escudos, logos, fotos ni imágenes oficiales (restricción legal)
+  - [x] T22.9 Sin escudos oficiales, logos, fotos ni imágenes oficiales (restricción legal; ver T45 para las insignias genéricas)
   - [x] T22.10 Probado con Playwright en Chromium emulando 390 px, 360 px y escritorio 1280 px
   - [ ] T22.11 Revisar en celulares reales (iOS Safari y Android Chrome), incluido el menú nativo de compartir
 
@@ -106,6 +106,14 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T44.5 Tests: plan por evento, movimiento reducido, silenciado, motor con contexto y vibración simulados, guardado
   - [x] T44.6 Probado en navegador: el botón silencia, se recuerda al recargar, sin errores en consola
   - [ ] T44.7 Sonido real y vibración en celulares (lo prueba el usuario)
+
+- [ ] T45 **Escudos genéricos de los clubes**
+  - [x] T45.1 `lib/crests.ts`: un escudo por club (sigla, dos colores, diseño), sin símbolos oficiales
+  - [x] T45.2 Componente `Crest` con el estilo de `Flag`
+  - [x] T45.3 Escudo en la celda de Club, en la fila de pista de club y en el ejemplo de la ayuda (no en el buscador)
+  - [x] T45.4 Tests: todos los clubes, sin colores ni siglas repetidos, contraste de la sigla
+  - [x] T45.5 Probado en navegador a 360 px y 1280 px sobre celdas verde, amarilla y gris
+  - [ ] T45.6 Revisar colores y siglas con el dueño del producto (los de confianza baja)
 
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
