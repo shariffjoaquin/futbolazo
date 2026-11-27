@@ -29,6 +29,30 @@ export const CREST_HEIGHT = 28;
 export const CREST_PATH =
   "M3.5 1.5 H20.5 Q22.5 1.5 22.5 3.5 V12.5 C22.5 19.5 17.5 24.3 12 26.5 C6.5 24.3 1.5 19.5 1.5 12.5 V3.5 Q1.5 1.5 3.5 1.5 Z";
 
+/** Medidas del dibujo, compartidas por `components/Crest.tsx` (SVG) y la imagen de resultado (canvas). */
+export const CREST_PATTERN = {
+  /** Franja arriba: alto. */
+  jefeHeight: 8,
+  /** Punta inferior: desde qué altura. */
+  puntaY: 19.5,
+  /** Borde: trazo centrado en el contorno; con el recorte queda la mitad interior (2,5). */
+  bordeStroke: 5,
+} as const;
+
+/** Alto de la sigla según cuántas letras tiene (índice = largo). */
+export const CREST_SIGLA_SIZE = [0, 13, 10, 7.6] as const;
+
+/** Centro vertical de la sigla: con franja arriba baja un poco para quedar sobre el campo. */
+export function crestSiglaY(pattern: CrestPattern): number {
+  return pattern === "jefe" ? 16.8 : pattern === "punta" ? 13 : 14.6;
+}
+
+/** Interletra de la sigla: las de 3 letras se juntan un poco. */
+export const crestLetterSpacing = (sigla: string) => (sigla.length === 3 ? -0.2 : 0);
+
+/** Contorno fino y oscuro que separa el escudo del fondo. */
+export const CREST_OUTLINE = { color: "rgba(0, 0, 0, 0.45)", width: 1 } as const;
+
 const BLANCO = "#f5f5f0";
 const NEGRO = "#16181a";
 const ROJO = "#c8102e";

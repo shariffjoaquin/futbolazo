@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 11 (tarjeta de resultado como imagen; la 10 agregó el ícono propio y el texto del selector de nivel; la 9 agregó seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 12 (escudo del club en la imagen de resultado; la 11 agregó la tarjeta de resultado como imagen; la 10 agregó el ícono propio y el texto del selector de nivel; la 9 agregó seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -131,6 +131,9 @@ Ayuda opcional, aparte de las pistas de cada intento (que no cambian).
 - [ ] CA-83: Todo el contenido queda dentro de los márgenes seguros (260 px arriba, 380 px abajo, 120 px a los lados); los nombres largos se achican para caber.
 - [ ] CA-84: Con `navigator.canShare({ files })` se abre el menú nativo con el PNG; si no, se descarga `futbolazo-resultado.png`. Se anuncia "Imagen lista" o "No se pudo generar la imagen".
 - [ ] CA-85: Sin Canvas o si falla la generación, el juego sigue funcionando; la CSP no se amplía y no hay errores en consola.
+- [ ] CA-86: Fuera de retos, debajo del nombre se ve el escudo del club (idéntico al de la página: forma, colores, diseño y sigla, de 140 px) con el nombre del club al lado; si el club no tiene escudo, solo el nombre del club.
+- [ ] CA-87: En un reto de amigos la imagen no muestra el nombre del jugador, ni el escudo, ni el club.
+- [ ] CA-88: Con escudo, nombre largo y 6 filas, todo sigue dentro de los márgenes seguros y ningún bloque pisa a otro.
 
 **Persistencia**: las pistas pedidas se guardan con la partida en curso y sobreviven a recargas.
   Una partida nueva empieza sin pistas.
@@ -230,7 +233,12 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
     - Pierde: "No pude adivinar al jugador".
     - Debajo, el **nombre del jugador secreto**, salvo en un **reto de amigos**: ahí no se nombra
       (misma regla que el texto) y en su lugar dice "Reto de amigos".
-  - La **grilla de cuadraditos** de los intentos (verde, amarillo, gris), sin textos de las pistas.
+    - Debajo del nombre, el **escudo genérico del club** (el mismo de la página, §2.12: forma,
+      colores, diseño y sigla), de unos 140 px de alto y centrado, con el **nombre del club** en texto
+      al lado. Si el club no tiene escudo, solo el nombre del club. En un **reto de amigos** no se
+      muestra ni el escudo ni el club (serían una pista).
+  - La **grilla de cuadraditos** de los intentos (verde, amarillo, gris), sin textos de las pistas. Ocupa
+    el espacio que queda entre el jugador y el pie, con cuadraditos de hasta 56 px pensados para 6 filas.
   - Abajo, **"futbolazo.app"**.
 - **Márgenes seguros** para que no lo tapen los textos y botones de Instagram Stories y TikTok:
   260 px arriba, 380 px abajo y 120 px a los lados. Todo el contenido queda dentro; fuera solo hay fondo.

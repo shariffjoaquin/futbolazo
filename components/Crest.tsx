@@ -1,33 +1,40 @@
 import { useId } from "react";
-import { CREST_HEIGHT, CREST_PATH, CREST_WIDTH, crestInk, getCrest, type CrestData } from "@/lib/crests";
+import {
+  CREST_HEIGHT,
+  CREST_OUTLINE,
+  CREST_PATH,
+  CREST_PATTERN,
+  CREST_SIGLA_SIZE,
+  CREST_WIDTH,
+  crestInk,
+  crestLetterSpacing,
+  crestSiglaY,
+  getCrest,
+  type CrestData,
+} from "@/lib/crests";
 import { cn } from "@/lib/utils";
 
 /** Color secundario según el diseño, recortado a la forma del escudo. */
 function Pattern({ crest }: { crest: CrestData }) {
   switch (crest.pattern) {
     case "jefe":
-      return <rect x="0" y="0" width={CREST_WIDTH} height="8" fill={crest.secondary} />;
+      return <rect x="0" y="0" width={CREST_WIDTH} height={CREST_PATTERN.jefeHeight} fill={crest.secondary} />;
     case "punta":
-      return <rect x="0" y="19.5" width={CREST_WIDTH} height={CREST_HEIGHT} fill={crest.secondary} />;
+      return <rect x="0" y={CREST_PATTERN.puntaY} width={CREST_WIDTH} height={CREST_HEIGHT} fill={crest.secondary} />;
     case "borde":
-      // Trazo centrado en el contorno: con el recorte queda la mitad interior, un borde de 2,5.
-      return <path d={CREST_PATH} fill="none" stroke={crest.secondary} strokeWidth="5" />;
+      return <path d={CREST_PATH} fill="none" stroke={crest.secondary} strokeWidth={CREST_PATTERN.bordeStroke} />;
   }
 }
-
-/** Altura de la sigla: más chica cuantas más letras tenga. */
-const FONT_SIZE = [0, 13, 10, 7.6];
 
 /**
  * Escudo genérico del club en SVG propio: forma de escudo, dos colores y sigla. No imita el escudo
  * oficial. Decorativo: el nombre del club va siempre en texto al lado. `null` si el club no tiene.
+ * La imagen de resultado lo dibuja igual en canvas (`lib/shareImage.ts`), con las mismas medidas.
  */
 export function Crest({ club, className }: { club: string; className?: string }) {
   const clipId = `crest-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const crest = getCrest(club);
   if (!crest) return null;
-  // Con franja arriba, la sigla baja un poco para quedar sobre el campo.
-  const textY = crest.pattern === "jefe" ? 16.8 : crest.pattern === "punta" ? 13 : 14.6;
   return (
     <svg
       aria-hidden
@@ -45,19 +52,19 @@ export function Crest({ club, className }: { club: string; className?: string })
       </g>
       <text
         x={CREST_WIDTH / 2}
-        y={textY}
+        y={crestSiglaY(crest.pattern)}
         textAnchor="middle"
         dominantBaseline="central"
         fill={crestInk(crest.primary)}
-        fontSize={FONT_SIZE[crest.sigla.length]}
+        fontSize={CREST_SIGLA_SIZE[crest.sigla.length]}
         fontWeight="800"
         fontFamily="var(--font-display), sans-serif"
-        letterSpacing={crest.sigla.length === 3 ? "-0.2" : "0"}
+        letterSpacing={crestLetterSpacing(crest.sigla)}
       >
         {crest.sigla}
       </text>
       {/* Borde oscuro fino: separa el escudo del fondo verde, amarillo o gris de la celda. */}
-      <path d={CREST_PATH} fill="none" stroke="rgb(0 0 0 / 0.45)" strokeWidth="1" />
+      <path d={CREST_PATH} fill="none" stroke={CREST_OUTLINE.color} strokeWidth={CREST_OUTLINE.width} />
     </svg>
   );
 }

@@ -179,6 +179,12 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T49.4 Pre-generar la imagen al aparecer la tarjeta final
   - [x] T49.5 Navegador a 360 y 1280 px: generar, abrir y revisar la imagen (ganar, perder, reto, Fácil con pistas); sin errores de CSP
   - [ ] T49.6 Menú de compartir en celular real (lo prueba el usuario)
+- [x] T50 **Escudo del club en la imagen de resultado** (spec §2.8.1, plan decisión 18)
+  - [x] T50.1 Medidas de dibujo del escudo en `lib/crests.ts`, compartidas por `components/Crest.tsx` y el canvas
+  - [x] T50.2 `shareCardContent` con el club (nada en retos); fila "escudo + club" en `layoutShareCard`; dibujo con `Path2D`
+  - [x] T50.3 Reajustar el diseño: grilla en el espacio que queda, dentro de márgenes con escudo, nombre largo y 6 filas
+  - [x] T50.4 Tests: con escudo, sin escudo (retos, club sin escudo), márgenes y sin pisarse en todos los escenarios
+  - [x] T50.5 Navegador: ganar al primer intento, perder con 6 filas y 2 pistas, reto, Cienciano (sigla de 3 letras)
 
 ## Futuro (fuera de la fase 1)
 - [ ] F01 **Modo diario**: exponer `lib/daily.ts` como modo aparte, con su guardado, número de puzzle y `puzzles_diarios` en Supabase

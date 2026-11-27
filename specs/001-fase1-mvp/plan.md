@@ -48,7 +48,7 @@ futbolazo/
 │   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
 │   ├── difficulty.ts     # Niveles Fácil / Normal, clubes de Fácil y grupo de sorteo del secreto
 │   ├── challenge.ts      # Reto de amigos: código del link (codificar, decodificar, validar) e invitación
-│   ├── crests.ts         # Escudos genéricos de los clubes (colores, sigla, diseño) y contraste
+│   ├── crests.ts         # Escudos genéricos de los clubes (colores, sigla, diseño, medidas de dibujo) y contraste
 │   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
 │   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
 │   ├── shareImage.ts     # Tarjeta de resultado en PNG: contenido y diseño (puros) + dibujo en Canvas
@@ -233,6 +233,16 @@ futbolazo/
       cargan con `document.fonts.load` en el peso y estilo exactos antes de dibujar; luego
       `document.fonts.ready`.
     - **Sin emoji en el canvas**: la pista es una bombilla dibujada (círculo, cuello y base).
+    - **Escudo del club** en la tarjeta: se dibuja con Canvas 2D desde los datos de `lib/crests.ts`.
+      La forma es un `Path2D` con el mismo `CREST_PATH` del SVG, en las mismas coordenadas de 24 × 28
+      escaladas; recorte, color del campo, diseño (franja arriba, punta o borde), sigla y contorno
+      usan las mismas constantes que `components/Crest.tsx` (`CREST_SIGLA_SIZE`, `crestSiglaY`,
+      `CREST_PATTERN`, `CREST_OUTLINE`), que pasan a vivir en `lib/crests.ts` para que la página y la
+      imagen no se separen. No se carga el SVG como imagen: la CSP no cambia.
+    - **Diseño de la tarjeta**: título 150 px, puntaje 160 px, y debajo del nombre la fila "escudo +
+      club". La grilla ocupa lo que queda hasta el pie: su cuadradito se calcula para que entren 6
+      filas (máx. 56 px) y las filas reales se centran en ese espacio. En retos, sin fila de escudo,
+      la grilla tiene más espacio.
     - **Compartir**: `navigator.canShare({ files: [png] })` → `navigator.share({ files })`; si no se
       puede o el navegador lo rechaza (`NotAllowedError`), se descarga con un `<a download>` y un
       `blob:` temporal que se libera enseguida. Cancelar (`AbortError`) no hace nada.

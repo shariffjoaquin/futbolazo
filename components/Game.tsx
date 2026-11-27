@@ -126,6 +126,7 @@ export default function Game() {
         won,
         points: score.total,
         targetName: target.nombre,
+        targetClub: target.club,
         hintsUsed: game.hints.length,
         nivel: game.nivel,
         challenge: !!challengeCode,
