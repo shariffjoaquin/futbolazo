@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlayerById, players } from "../data/players";
+import { encodeChallenge } from "./challenge";
 import { EASY_CLUBS } from "./difficulty";
-import { resumeOrStartGame, startNewGame } from "./game";
+import { bootGame, isGameOver, resumeOrStartChallenge, resumeOrStartGame, resumeOrStartNormal, startNewGame } from "./game";
 import type { HintType } from "./hints";
 import {
+  loadChallenge,
   loadGame,
   loadHelpSeen,
   loadRecent,
   loadNivel,
   loadStats,
   recordScore,
+  saveChallenge,
   saveGame,
   saveHelpSeen,
   saveNivel,
@@ -279,5 +282,92 @@ describe("partida en curso", () => {
       expect(next.guesses).toEqual([]);
       previous = next;
     }
+  });
+});
+
+describe("reto de amigos", () => {
+  const code = encodeChallenge(b.id, "facil");
+  const challenge = { code, targetId: b.id, nivel: "facil" as const };
+
+  it("con ?reto= válido se juega ese jugador en ese nivel", () => {
+    const boot = bootGame(`?reto=${code}`, () => 0, LIMA_NOON);
+    expect(boot.mode).toBe("challenge");
+    expect(boot.game).toEqual({ targetId: b.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: "facil" });
+  });
+
+  it("la partida del reto se guarda aparte: no toca la partida normal ni los recientes", () => {
+    const normal = startNewGame(() => 0, LIMA_NOON, "normal");
+    const recent = loadRecent();
+    const game = resumeOrStartChallenge(challenge, LIMA_NOON);
+    saveChallenge(code, { ...game, guesses: [c.id] });
+    expect(loadGame()).toEqual(normal);
+    expect(loadRecent()).toEqual(recent);
+    expect(loadChallenge(code, challenge)?.guesses).toEqual([c.id]);
+  });
+
+  it("al recargar sigue el mismo reto, con sus intentos (idempotente)", () => {
+    const first = bootGame(`?reto=${code}`, () => 0, LIMA_NOON);
+    saveChallenge(code, { ...first.game, guesses: [c.id] });
+    const again = bootGame(`?reto=${code.toUpperCase()}.`, () => 0.9, LIMA_NOON);
+    expect(again.game.guesses).toEqual([c.id]);
+  });
+
+  it("un reto terminado se retoma terminado (no se vuelve a jugar)", () => {
+    saveChallenge(code, { ...resumeOrStartChallenge(challenge, LIMA_NOON), guesses: [c.id, b.id] });
+    const boot = bootGame(`?reto=${code}`);
+    expect(isGameOver(boot.game)).toBe(true);
+    expect(boot.game.guesses).toEqual([c.id, b.id]);
+  });
+
+  it("con ?reto= inválido se juega normal y se avisa", () => {
+    const boot = bootGame("?reto=nada", () => 0, LIMA_NOON);
+    expect(boot).toMatchObject({ mode: "normal", invalidChallenge: true });
+    expect(loadGame()).toEqual(boot.game);
+    expect(bootGame("", () => 0, LIMA_NOON)).toMatchObject({ mode: "normal", invalidChallenge: false });
+  });
+
+  it("descarta un reto guardado cuyo jugador no coincide con el código", () => {
+    saveChallenge(code, { targetId: c.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: "facil" });
+    expect(loadChallenge(code, challenge)).toBeNull();
+    expect(resumeOrStartChallenge(challenge, LIMA_NOON).targetId).toBe(b.id);
+  });
+
+  it("guarda como máximo los 30 retos más recientes", () => {
+    const codes = players.slice(0, 35).map((p) => encodeChallenge(p.id, "normal"));
+    players.slice(0, 35).forEach((p, i) =>
+      saveChallenge(codes[i], { targetId: p.id, guesses: [], fecha: "2026-11-26", hints: [], nivel: "normal" }),
+    );
+    const saved = Object.keys(JSON.parse(localStorage.getItem("futbolazo:v2:retos")!));
+    expect(saved).toEqual(codes.slice(5));
+  });
+
+  it("los puntos del reto suman a los récords de su nivel", () => {
+    recordScore(850, challenge.nivel);
+    expect(loadStats("facil")).toEqual({ mejor: 850, total: 850 });
+    expect(loadStats("normal")).toEqual({ mejor: 0, total: 0 });
+  });
+
+  it("jugar otra vez tras un reto retoma la normal a medias, o empieza una nueva si terminó", () => {
+    const normal = startNewGame(() => 0, LIMA_NOON, "normal");
+    saveGame({ ...normal, guesses: [c.id] });
+    expect(resumeOrStartNormal(() => 0, LIMA_NOON)).toEqual({ ...normal, guesses: [c.id] });
+    saveGame({ ...normal, guesses: [normal.targetId] });
+    const next = resumeOrStartNormal(() => 0.5, LIMA_NOON);
+    expect(next.guesses).toEqual([]);
+  });
+
+  it("con localStorage bloqueado el reto se juega igual", () => {
+    vi.stubGlobal("localStorage", {
+      get length(): number {
+        throw new Error("bloqueado");
+      },
+      getItem: () => {
+        throw new Error("bloqueado");
+      },
+      setItem: () => {
+        throw new Error("bloqueado");
+      },
+    });
+    expect(bootGame(`?reto=${code}`).game.targetId).toBe(b.id);
   });
 });

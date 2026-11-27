@@ -10,6 +10,9 @@ const RECENT_KEY = "futbolazo:v2:recientes";
 const HELP_KEY = "futbolazo:v2:visto-ayuda";
 const SCORE_KEY = "futbolazo:v2:puntaje";
 const NIVEL_KEY = "futbolazo:v2:nivel";
+const CHALLENGES_KEY = "futbolazo:v2:retos";
+/** Partidas de reto que se guardan como máximo (las más recientes). */
+export const MAX_SAVED_CHALLENGES = 30;
 /** Claves del modo diario anterior (una por fecha). */
 const LEGACY_PREFIX = "futbolazo:v1:";
 
@@ -50,7 +53,12 @@ function validIds(value: unknown): string[] {
 
 /** Partida guardada, o `null` si no hay o no es válida. */
 export function loadGame(): SavedGame | null {
-  const data = read(GAME_KEY) as Partial<Record<keyof SavedGame, unknown>> | null;
+  return parseGame(read(GAME_KEY));
+}
+
+/** Valida una partida guardada (normal o de reto). */
+function parseGame(value: unknown): SavedGame | null {
+  const data = value as Partial<Record<keyof SavedGame, unknown>> | null;
   if (!data || typeof data !== "object") return null;
   const { targetId, fecha } = data;
   if (typeof targetId !== "string" || !getPlayerById(targetId)) return null;
@@ -92,6 +100,31 @@ export function loadHelpSeen(): boolean {
 
 export function saveHelpSeen(): void {
   write(HELP_KEY, true);
+}
+
+function readChallenges(): Record<string, unknown> {
+  const data = read(CHALLENGES_KEY);
+  return data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+}
+
+/**
+ * Partida de un reto, o `null` si no se jugó o no es válida. Se descarta si el jugador no coincide
+ * con el del código (`expected`).
+ */
+export function loadChallenge(code: string, expected: { targetId: string; nivel: Nivel }): SavedGame | null {
+  const game = parseGame(readChallenges()[code]);
+  if (!game || game.targetId !== expected.targetId) return null;
+  return { ...game, nivel: expected.nivel };
+}
+
+/** Guarda la partida de un reto aparte de la partida normal; conserva solo los retos más recientes. */
+export function saveChallenge(code: string, game: SavedGame): void {
+  const all = readChallenges();
+  delete all[code];
+  all[code] = game;
+  const codes = Object.keys(all);
+  for (const old of codes.slice(0, Math.max(0, codes.length - MAX_SAVED_CHALLENGES))) delete all[old];
+  write(CHALLENGES_KEY, all);
 }
 
 /** Nivel elegido para las partidas nuevas; Normal si no hay o no es válido. */

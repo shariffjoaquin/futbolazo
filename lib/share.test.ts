@@ -77,6 +77,36 @@ describe("buildShareText", () => {
     );
   });
 
+  it("reto: línea 🏆 Reto de amigos, link del reto al final y sin nombre del jugador", () => {
+    const url = "https://futbolazo.pe/?reto=k3x9q2m";
+    const results = [miss(), miss(), miss(), hit()];
+    const lines = buildShareText(input({ results, points: 650, hintsUsed: 1, nivel: "facil", url, challenge: true })).split("\n");
+    expect(lines).toEqual([
+      "Futbolazo 🇵🇪 4/6 💡1 · 650 pts · Fácil",
+      "🏆 Reto de amigos",
+      "",
+      expect.any(String),
+      expect.any(String),
+      expect.any(String),
+      "🟩🟩🟩🟩🟩🟩",
+      "",
+      "Me tomó 4 intentos adivinar al jugador misterioso",
+      "",
+      url,
+    ]);
+    expect(lines.join("\n")).not.toContain(a.nombre);
+  });
+
+  it("reto: frases sin nombre al primer intento y al perder", () => {
+    const share = (over: Partial<ShareInput>) => buildShareText(input({ challenge: true, ...over }));
+    expect(share({ results: [hit()] })).toContain("Lo adiviné al primer intento\n");
+    expect(share({ results: Array.from({ length: 6 }, miss), won: false })).toContain("No pude adivinar al jugador misterioso");
+  });
+
+  it("partida normal no lleva la línea del reto", () => {
+    expect(buildShareText(input({}))).not.toContain("Reto de amigos");
+  });
+
   it("no agrega caracteres de formato de WhatsApp", () => {
     expect(buildShareText(input({ targetName: "Paolo Guerrero" }))).not.toMatch(/[*_~]/);
   });

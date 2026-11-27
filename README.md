@@ -19,6 +19,7 @@ npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2
 - `lib/share.ts` — texto para compartir (puntaje y frase con el jugador)
 - `lib/score.ts` — puntaje de la partida (constantes ajustables) y récords
 - `lib/difficulty.ts` — niveles Fácil / Normal y clubes de Fácil (`EASY_CLUBS`)
+- `lib/challenge.ts` — reto de amigos: código del link `/?reto=` e invitación
 - `components/DifficultyPicker.tsx` — selector de nivel
 - `lib/storage.ts` — partida en curso y recientes en localStorage
 - `lib/daily.ts` — fecha de Lima; modo diario (futuro, sin uso en la UI)

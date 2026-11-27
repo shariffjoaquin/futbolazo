@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 5 (nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 6 (reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -204,12 +204,64 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
 
 - **No hay cuentas ni login.** Todo ocurre en el navegador.
 - En `localStorage` se guardan: la partida en curso (con sus pistas), los últimos 10 jugadores
-  sorteados, si ya se vio la ayuda, el nivel elegido, y el mejor puntaje y el total acumulado de
-  cada nivel.
+  sorteados, si ya se vio la ayuda, el nivel elegido, el mejor puntaje y el total acumulado de
+  cada nivel, y las partidas de reto (aparte de la partida normal).
 - Si `localStorage` no está disponible (p. ej. modo privado), se juega igual, sin guardar:
   al recargar empieza una partida nueva y la exclusión de repetidos no se recuerda.
 - Datos guardados corruptos o con jugadores que ya no existen se ignoran sin romper el juego
   (si la partida guardada no es válida, empieza una nueva).
+
+### 2.10 Reto de amigos
+
+Jugar el **mismo jugador secreto que un amigo** y comparar en el chat, sin servidor: todo va en el link.
+
+- **Botón "Retar a mis amigos"**:
+  - En la **pantalla de inicio** (partida sin intentos): reta con el secreto de la partida actual.
+    Quien reta todavía no lo jugó, así que la invitación no lleva resultado.
+  - En la **tarjeta final**: reta con el secreto de la partida que acaba de terminar, con su resultado.
+- **Link**: `/?reto=CODIGO`. El código identifica al jugador secreto **y** el nivel:
+  - **Ofuscado**: no lleva el nombre ni el id en claro; son 7 letras y números en minúscula
+    (p. ej. `/?reto=k3x9q2m`). El mismo jugador y nivel dan siempre el mismo código.
+  - **Tolerante**: ignora mayúsculas, espacios y signos que se peguen al copiarlo (p. ej. un punto al
+    final). Si el código no es válido o el jugador ya no existe en la lista, se **ignora**: se juega
+    una partida normal, se quita `?reto=` de la URL y se muestra un aviso breve: "Ese link de reto no
+    es válido. Juegas una partida normal."
+- **Invitación** (menú nativo para compartir; si no existe o falla, se copia al portapapeles con el
+  aviso "¡Link del reto copiado!"):
+
+  ```
+  Te reto a adivinar al jugador misterioso de Futbolazo ⚽ ¿Lo adivinas en menos intentos que yo?
+  Yo lo saqué en 4/6 · 650 pts          (solo si quien reta ya terminó esa partida)
+
+  <link del reto>
+  ```
+
+  Si quien reta perdió esa partida: "Yo no lo saqué: X/6 · 120 pts". Nunca revela el nombre.
+- **Quien abre el link** juega ese jugador en ese nivel:
+  - El selector de nivel **no se muestra**; en su lugar se ven un chip **"🏆 Reto de amigos"** y el
+    chip del nivel del reto.
+  - La partida de reto se guarda **aparte** de la partida normal (una por código). La partida normal
+    que tuviera a medias no se toca.
+  - Recargar sigue en la misma partida de reto. Si **ya terminó** ese reto, al abrir el link se ve su
+    resultado y no puede jugarlo de nuevo.
+  - Los puntos del reto **suman** al mejor y al acumulado **de su nivel**, solo la primera vez (al
+    terminarlo); como no se puede volver a jugar, no hay segunda vez.
+  - El reto no cuenta en la lista de los últimos 10 sorteados.
+- **Compartir el resultado de un reto**: igual que el normal (§2.8), más una línea
+  **"🏆 Reto de amigos"** bajo el encabezado, y al final el **link del reto** en vez del link del
+  juego, para que otros del grupo se sumen y comparen.
+  - **No nombra al jugador**: como el mensaje va al mismo chat donde otros van a jugar ese reto, la
+    frase cambia a "Lo adiviné al primer intento", "Me tomó N intentos adivinar al jugador misterioso"
+    o "No pude adivinar al jugador misterioso".
+- **"Jugar otra vez" tras un reto** vuelve al juego normal y quita `?reto=` de la URL: si había una
+  partida normal a medias, la retoma; si no, empieza una nueva con el nivel elegido.
+- Desde la tarjeta final de un reto también se puede "Retar a mis amigos" con el mismo link.
+- Limitación conocida: la edad se calcula a la fecha en que cada uno abre el reto; si el jugador
+  cumple años entre medio, la pista de edad puede diferir en un año entre amigos.
+- Limitación conocida: quien reta puede abrir su propio link y jugar el reto aparte (ya conoce al
+  jugador). Sin cuentas no hay forma fiable de impedirlo; es un juego entre amigos.
+- Limitación conocida: el código no es secreto. Oculta el nombre a simple vista, pero alguien con
+  conocimientos técnicos podría averiguar el jugador probando códigos.
 
 ## 3. Fuera de la fase 1
 
@@ -219,7 +271,7 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
 - Login, cuentas, perfiles o sincronizar entre dispositivos.
 - Estadísticas e historial más allá del mejor puntaje y el acumulado (rachas, distribución de
   intentos, % de victorias).
-- Rankings, ligas entre amigos o cualquier competencia.
+- Rankings, ligas o tablas de puntajes con servidor (el reto de amigos es solo por link y se compara en el chat).
 - Abandonar o reiniciar una partida a medias.
 - Otras ligas, selecciones o jugadores históricos.
 - Otros tipos de pistas extra (foto, silueta, estadísticas) o "comprar" pistas.
@@ -268,6 +320,18 @@ Ejemplos: `Futbolazo 🇵🇪 4/6 💡1 · 650 pts` (Normal) y `Futbolazo 🇵�
 - [ ] CA-43: El selector se ve antes del primer intento y en la tarjeta final, se usa con teclado, y no se puede cambiar el nivel de una partida con intentos (el cambio en la tarjeta final se aplica a la siguiente).
 - [ ] CA-44: El texto de compartir termina con " · Fácil" solo en partidas de Fácil.
 - [ ] CA-45: El puntaje es igual en ambos niveles, y el mejor puntaje y el acumulado se guardan y muestran por separado para cada nivel.
+
+**Reto de amigos**
+- [ ] CA-46: "Retar a mis amigos" está en la pantalla de inicio y en la tarjeta final, y genera `/?reto=CODIGO` con un código de 7 caracteres que no contiene el nombre ni el id del jugador.
+- [ ] CA-47: El mismo jugador y nivel dan el mismo código; cada combinación jugador + nivel de la lista da un código distinto.
+- [ ] CA-48: Un código con mayúsculas, espacios o signos pegados se acepta; uno inválido o de un jugador que ya no existe se ignora con aviso y se juega normal sin `?reto=` en la URL.
+- [ ] CA-49: La invitación usa el menú nativo o copia al portapapeles, tiene el texto acordado y el link, y solo incluye "Yo lo saqué en N/6 · P pts" (o "Yo no lo saqué: X/6 · P pts") si quien reta terminó esa partida; nunca el nombre.
+- [ ] CA-50: Quien abre el link juega ese jugador en ese nivel, sin selector de nivel y con el chip "🏆 Reto de amigos".
+- [ ] CA-51: La partida de reto se guarda aparte: no cambia la partida normal y al recargar sigue el reto.
+- [ ] CA-52: Un reto ya terminado muestra su resultado y no se puede volver a jugar.
+- [ ] CA-53: Los puntos de un reto suman al mejor y acumulado de su nivel una sola vez.
+- [ ] CA-54: Compartir un reto agrega "🏆 Reto de amigos", termina con el link del reto y no nombra al jugador.
+- [ ] CA-55: "Jugar otra vez" tras un reto vuelve al juego normal y quita `?reto=` de la URL.
 
 **Intentos y pistas**
 - [ ] CA-09: Solo se pueden elegir jugadores de la lista; la búsqueda funciona sin tildes ni mayúsculas ("rondon" encuentra a "Yeferson Rondón").

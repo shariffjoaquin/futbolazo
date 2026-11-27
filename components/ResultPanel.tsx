@@ -2,7 +2,7 @@
 
 import { RotateCcw, Share2 } from "lucide-react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { DifficultyPicker } from "@/components/DifficultyPicker";
 import { STATUS_CLASS } from "@/components/HintCell";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ export function ResultPanel({
   gameNivel,
   nextNivel,
   onNivelChange,
+  challengeButton,
   gameKey,
   delay,
   onShare,
@@ -53,6 +54,8 @@ export function ResultPanel({
   /** Nivel elegido para la próxima partida. */
   nextNivel: Nivel;
   onNivelChange: (nivel: Nivel) => void;
+  /** Botón "Retar a mis amigos" con el secreto de esta partida. */
+  challengeButton: ReactNode;
   /** Identifica la partida para elegir la frase. */
   gameKey: string;
   /** Espera a que termine de voltearse la última fila. */
@@ -125,6 +128,8 @@ export function ResultPanel({
             Jugar otra vez
           </Button>
         </div>
+
+        {challengeButton}
       </div>
     </motion.section>
   );

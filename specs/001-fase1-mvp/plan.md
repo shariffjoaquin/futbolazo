@@ -43,6 +43,7 @@ futbolazo/
 │   ├── share.ts          # Texto para compartir, MAX_GUESSES, orden de atributos
 │   ├── score.ts          # Puntaje de la partida, constantes y récords (mejor y acumulado)
 │   ├── difficulty.ts     # Niveles Fácil / Normal, clubes de Fácil y grupo de sorteo del secreto
+│   ├── challenge.ts      # Reto de amigos: código del link (codificar, decodificar, validar) e invitación
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de random, game, storage, daily, compare y share
 ├── specs/
@@ -87,6 +88,7 @@ futbolazo/
     - `futbolazo:v2:puntaje` → `{ "normal": { mejor, total }, "facil": { mejor, total } }` (enteros ≥ 0;
       lo que falte o no sea válido cuenta como 0; el formato viejo `{ mejor, total }` se lee como Normal)
     - La partida guarda `nivel`; sin `nivel` se carga como `"normal"`.
+    - `futbolazo:v2:retos` → `{ [código]: partida }` (mismo formato que `partida`, máx. 30).
     - Al cargar se descartan ids desconocidos, duplicados y lo que pase de 6 intentos. Si el
       `targetId` no existe o la fecha no es válida, la partida se descarta.
     - Al guardar se borran las claves antiguas `futbolazo:v1:*` del modo diario.
@@ -121,12 +123,27 @@ futbolazo/
       preferencia vuelve a sortear; en la tarjeta final solo guarda la preferencia para "Jugar otra vez".
     - Selector como grupo de radios nativos dentro de un `fieldset` con `legend`:
       flechas, Tab y Espacio funcionan sin código extra.
-14. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+14. **Reto de amigos** (`lib/challenge.ts`, lógica pura; sin backend ni dependencias nuevas):
+    - `encodeChallenge(id, nivel)`: FNV-1a de 32 bits con un prefijo fijo, base 36, 7 caracteres.
+      Corto y opaco; no es seguridad (alguien podría probar códigos), solo evita leer el nombre.
+    - `decodeChallenge(codigo, lista)`: normaliza (minúsculas, quita lo que no sea `[0-9a-z]`), valida
+      el largo y busca entre todos los jugadores × niveles; `null` si no hay coincidencia.
+    - `challengeUrl(base, código)`, `buildInviteText(url, resultado?)` y el resultado compacto
+      ("Yo lo saqué en 4/6 · 650 pts").
+    - `lib/game.ts`: `bootGame(search)` decide al cargar entre reto válido, reto inválido (aviso) o
+      partida normal; `resumeOrStartChallenge(código)` retoma o crea la partida de ese reto.
+      `storage.ts` guarda los retos en su propia clave, con el mismo validador que la partida normal.
+    - `Game.tsx` lleva el código del reto en estado y guarda con `saveChallenge` o `saveGame` según
+      el modo. La URL se lee de `window.location` al iniciar (el juego ya corre solo en el cliente) y
+      se limpia con `window.history.replaceState`, que Next 16 integra con su router.
+    - Los récords se suman en el mismo punto que una partida normal (el intento que la termina), y
+      como un reto terminado no se puede reabrir para jugar, suman una sola vez.
+15. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-15. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+16. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-16. **Textos de la interfaz en español** y `lang="es"`.
-17. **Sin dependencias de runtime** aparte de Next y React.
+17. **Textos de la interfaz en español** y `lang="es"`.
+18. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 

@@ -88,6 +88,16 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [x] T42.7 Tests: sorteo por nivel, lista vacía → Normal, clubes existen, guardado del nivel, récords por nivel, compartir
   - [x] T42.8 Probado en navegador a 360 px y 1280 px
 
+- [x] T43 **Reto de amigos (mismo jugador para el grupo)**
+  - [x] T43.1 `lib/challenge.ts`: codificar, decodificar y validar el código (ofuscado, 7 caracteres, tolerante)
+  - [x] T43.2 Invitación con link y resultado sin nombre; menú nativo o portapapeles
+  - [x] T43.3 Al abrir `/?reto=`: jugar ese jugador y nivel, chip "🏆 Reto de amigos", sin selector; inválido → aviso y juego normal
+  - [x] T43.4 Partidas de reto guardadas aparte (`futbolazo:v2:retos`); reto terminado no se vuelve a jugar; récords una sola vez
+  - [x] T43.5 Compartir un reto: línea "🏆 Reto de amigos", link del reto, sin nombre
+  - [x] T43.6 "Jugar otra vez" tras un reto vuelve al juego normal y limpia la URL
+  - [x] T43.7 Tests de `challenge`, guardado de retos, arranque con `?reto=` y textos
+  - [x] T43.8 Probado en navegador a 360 px y 1280 px
+
 ## Persistencia
 - [~] T23 Progreso del día en `localStorage` (`futbolazo:v1:<fecha>`) — reemplazado por T36; las claves viejas se borran
 - [x] T24 Tolerancia a datos corruptos o `localStorage` bloqueado

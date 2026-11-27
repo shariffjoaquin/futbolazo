@@ -38,12 +38,24 @@ Limitaciones:
 | `futbolazo:v2:partida` | `{ "targetId": "diego-quispe", "guesses": ["luis-arana"], "fecha": "2026-11-26", "hints": ["club"], "nivel": "facil" }` | partida en curso o recién terminada; `fecha` = día de Lima en que empezó, para calcular edades; `hints` = tipos de pista pedidos, en orden (máx. 2); `nivel` = `"facil"` o `"normal"` con que se sorteó (si falta o no es válido, `"normal"`) |
 | `futbolazo:v2:recientes` | `["renzo-carrillo", "diego-quispe"]` | últimos 10 jugadores sorteados, el más reciente al final |
 | `futbolazo:v2:visto-ayuda` | `true` | ya se mostró "¿Cómo se juega?"; si falta, el diálogo se abre solo |
+| `futbolazo:v2:retos` | `{ "k3x9q2m": { "targetId": "leonel-gonzalez", "guesses": ["angel-ojeda"], "fecha": "2026-11-26", "hints": [], "nivel": "facil" } }` | partidas de **reto de amigos**, una por código, con el mismo formato que `partida`; aparte de la partida normal. Se descartan las entradas no válidas o cuyo `targetId` no coincide con su código. Se guardan como máximo las 30 más recientes |
 | `futbolazo:v2:nivel` | `"facil"` | nivel elegido para las partidas nuevas: `"facil"` o `"normal"`; si falta o no es válido, `"normal"` |
 | `futbolazo:v2:puntaje` | `{ "normal": { "mejor": 1050, "total": 4320 }, "facil": { "mejor": 900, "total": 1500 } }` | récords **por nivel**: `mejor` = puntaje más alto de una partida; `total` = suma de todas las partidas terminadas en ese nivel. Enteros ≥ 0; un nivel que falta o no es válido se toma como `{ "mejor": 0, "total": 0 }`. Se actualiza una sola vez por partida, al terminar, en el nivel de la partida. El formato anterior `{ "mejor", "total" }` (sin niveles) se lee como récords de Normal |
 | `futbolazo:v1:<YYYY-MM-DD>` | `{ "guesses": [...] }` | **obsoleta** (modo diario anterior); se borra al guardar |
 
 Si un jugador desaparece de la lista (p. ej. al cambiar de temporada), su id se ignora en `guesses`
 y en `recientes`, y una partida cuyo `targetId` ya no existe se descarta.
+
+### 1.2 Código de reto (`?reto=`)
+
+No se guarda en ningún servidor: el link lleva todo.
+
+- Código = hash FNV-1a de 32 bits de `"futbolazo|<id del jugador>|<nivel>"`, en base 36 y rellenado
+  a **7 caracteres** (`[0-9a-z]{7}`). No se puede leer el nombre ni el id.
+- Para decodificar se calcula el código de cada jugador de la lista en cada nivel y se busca el que
+  coincide. Un test comprueba que no haya dos combinaciones con el mismo código.
+- Como depende del `id` (estable) y no de la posición en la lista, sigue valiendo aunque se
+  reordenen o agreguen jugadores; si el jugador se quita de la lista, el código deja de valer.
 
 ## 2. Modelo futuro en Supabase
 

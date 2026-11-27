@@ -1,7 +1,7 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DifficultyPicker } from "@/components/DifficultyPicker";
@@ -9,15 +9,22 @@ import { GuessRow } from "@/components/GuessRow";
 import { HintPanel } from "@/components/HintPanel";
 import { COLUMNS, GRID_COLS, REVEAL_SECONDS } from "@/components/HintCell";
 import { ResultPanel } from "@/components/ResultPanel";
+import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { getPlayerById, players, type Player } from "@/data/players";
+import { buildInviteText, challengeUrl, encodeChallenge } from "@/lib/challenge";
 import { compare } from "@/lib/compare";
 import { NIVEL_LABEL, type Nivel } from "@/lib/difficulty";
-import { resumeOrStartGame, startNewGame } from "@/lib/game";
+import { bootGame, resumeOrStartNormal, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { computeScore } from "@/lib/score";
-import { buildShareText, MAX_GUESSES } from "@/lib/share";
-import { loadNivel, loadStats, recordScore, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
+import { buildShareText, CHALLENGE_LINE, MAX_GUESSES } from "@/lib/share";
+import { loadNivel, loadStats, recordScore, saveChallenge, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
+
+const INVALID_CHALLENGE = "Ese link de reto no es válido. Juegas una partida normal.";
+
+/** URL del juego sin parámetros (sin `?reto=`). */
+const gameUrl = () => window.location.origin + window.location.pathname;
 
 const normalize = (s: string) =>
   s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
@@ -31,11 +38,19 @@ function fireConfetti() {
 }
 
 export default function Game() {
-  // Retoma la partida guardada o empieza una nueva; es idempotente, así el doble render de modo estricto no gasta jugadores.
-  const [game, setGame] = useState<SavedGame>(() => resumeOrStartGame());
+  // Según la URL: partida del reto (`?reto=`) o la normal guardada / nueva. Es idempotente, así el doble
+  // render de modo estricto no gasta jugadores. El juego corre solo en el cliente: `window` existe.
+  const [boot] = useState(() => bootGame(window.location.search));
+  const [game, setGame] = useState<SavedGame>(boot.game);
+  // Código del reto que se está jugando, o `null` en el juego normal.
+  const [challengeCode, setChallengeCode] = useState<string | null>(
+    boot.mode === "challenge" ? boot.challenge.code : null,
+  );
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(
+    boot.mode === "normal" && boot.invalidChallenge ? INVALID_CHALLENGE : null,
+  );
   // Último intento enviado en esta sesión: solo ese se anima (al recargar, todo aparece quieto).
   const [revealing, setRevealing] = useState<string | null>(null);
   // Última pista pedida en esta sesión: solo esa entra animada.
@@ -80,6 +95,13 @@ export default function Game() {
     return players.filter((p) => !guesses.includes(p.id) && normalize(p.nombre).includes(q));
   }, [query, guesses]);
 
+  // Link de reto inválido: se juega normal, se limpia la URL y el aviso se va solo.
+  useEffect(() => {
+    if (boot.mode !== "normal" || !boot.invalidChallenge) return;
+    window.history.replaceState(null, "", gameUrl());
+    toastTimer.current = setTimeout(() => setToast(null), 4500);
+  }, [boot]);
+
   useEffect(() => {
     if (!(won && justEnded)) return;
     const t = setTimeout(fireConfetti, resultDelay * 1000);
@@ -96,7 +118,7 @@ export default function Game() {
     if (over || guesses.includes(player.id)) return;
     const next = { ...game, guesses: [...guesses, player.id] };
     setGame(next);
-    saveGame(next);
+    persist(next);
     // El intento que termina la partida es el único que suma a los récords.
     if (player.id === target.id || next.guesses.length >= MAX_GUESSES) {
       const finalResults = [...results, compare(player, target, dateKey)];
@@ -113,15 +135,21 @@ export default function Game() {
     if (!type) return;
     const next = { ...game, hints: [...game.hints, type] };
     setGame(next);
-    saveGame(next);
+    persist(next);
     setNewHint(type);
+  }
+
+  /** La partida de un reto se guarda aparte de la normal. */
+  function persist(next: SavedGame) {
+    if (challengeCode) saveChallenge(challengeCode, next);
+    else saveGame(next);
   }
 
   /** Cambia el nivel elegido. Antes del primer intento vuelve a sortear; si no, vale para la próxima partida. */
   function chooseNivel(next: Nivel) {
     setNivel(next);
     saveNivel(next);
-    if (!over && guesses.length === 0 && next !== game.nivel) startGame(next);
+    if (!challengeCode && !over && guesses.length === 0 && next !== game.nivel) startGame(next);
   }
 
   function startGame(level: Nivel) {
@@ -131,7 +159,16 @@ export default function Game() {
   }
 
   function playAgain() {
-    startGame(nivel);
+    if (challengeCode) {
+      // Tras un reto se vuelve al juego normal, sin `?reto=` en la URL.
+      setChallengeCode(null);
+      window.history.replaceState(null, "", gameUrl());
+      const next = resumeOrStartNormal();
+      setGame(next);
+      setStats(loadStats(next.nivel));
+    } else {
+      startGame(nivel);
+    }
     setRevealing(null);
     setNewHint(null);
     setQuery("");
@@ -150,17 +187,31 @@ export default function Game() {
     }
   }
 
-  async function share() {
+  /** Link del reto con el secreto y el nivel de la partida actual. */
+  const currentChallengeUrl = () => challengeUrl(gameUrl(), challengeCode ?? encodeChallenge(game.targetId, game.nivel));
+
+  function share() {
     if (!score) return;
     const text = buildShareText({
       results,
       won,
       points: score.total,
       targetName: target.nombre,
-      url: window.location.origin + window.location.pathname,
+      url: challengeCode ? currentChallengeUrl() : gameUrl(),
       hintsUsed: game.hints.length,
       nivel: game.nivel,
+      challenge: !!challengeCode,
     });
+    return shareText(text, "¡Copiado al portapapeles!");
+  }
+
+  /** Invitación al reto; si la partida ya terminó, lleva el resultado (sin el nombre). */
+  function challengeFriends() {
+    const result = score ? { won, attempts: guesses.length, points: score.total } : null;
+    return shareText(buildInviteText(currentChallengeUrl(), result), "¡Link del reto copiado!");
+  }
+
+  async function shareText(text: string, copied: string) {
     if (navigator.share) {
       try {
         await navigator.share({ text });
@@ -172,7 +223,7 @@ export default function Game() {
     }
     try {
       await navigator.clipboard.writeText(text);
-      showToast("¡Copiado al portapapeles!");
+      showToast(copied);
     } catch {
       showToast("No se pudo copiar");
     }
@@ -183,11 +234,16 @@ export default function Game() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex w-full flex-col gap-4">
-        <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
-          <span>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
+          <span className="whitespace-nowrap">
             Intento <strong className="font-display text-lg text-foreground">{attempt}</strong> de {MAX_GUESSES}
           </span>
-          {guesses.length > 0 && (
+          {challengeCode && (
+            <span className="rounded-full border border-hint-gold/70 bg-hint-gold/10 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-hint-gold">
+              {CHALLENGE_LINE}
+            </span>
+          )}
+          {(challengeCode || guesses.length > 0) && (
             <span className="rounded-full border border-white/15 px-2 py-0.5 text-xs font-semibold">
               <span className="sr-only">Nivel </span>
               {NIVEL_LABEL[game.nivel]}
@@ -209,7 +265,12 @@ export default function Game() {
           </span>
         </div>
 
-        {!over && guesses.length === 0 && <DifficultyPicker value={game.nivel} onChange={chooseNivel} />}
+        {!over && guesses.length === 0 && (
+          <div className="flex flex-col items-center gap-3">
+            {!challengeCode && <DifficultyPicker value={game.nivel} onChange={chooseNivel} />}
+            <ChallengeButton onClick={challengeFriends} />
+          </div>
+        )}
 
         {!over && (
           <Command
@@ -268,6 +329,7 @@ export default function Game() {
               gameNivel={game.nivel}
               nextNivel={nivel}
               onNivelChange={chooseNivel}
+              challengeButton={<ChallengeButton onClick={challengeFriends} className="w-full" />}
               gameKey={game.targetId + guesses.join()}
               delay={resultDelay}
               onShare={share}
@@ -322,7 +384,7 @@ export default function Game() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
-              className="fixed inset-x-0 bottom-6 z-50 mx-auto w-fit rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-background shadow-xl"
+              className="fixed inset-x-0 bottom-6 z-50 mx-auto w-fit max-w-[calc(100%-2rem)] rounded-3xl bg-white px-5 py-2.5 text-center text-sm font-semibold text-background shadow-xl"
             >
               {toast}
             </motion.div>
@@ -330,6 +392,19 @@ export default function Game() {
         </AnimatePresence>
       </div>
     </MotionConfig>
+  );
+}
+
+function ChallengeButton({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <Button
+      onClick={onClick}
+      variant="outline"
+      className={`h-12 rounded-full border-2 border-hint-gold/80 bg-hint-gold/10 px-5 font-display text-lg font-bold tracking-wide text-hint-gold uppercase hover:bg-hint-gold/20 hover:text-hint-gold dark:border-hint-gold/80 dark:bg-hint-gold/10 dark:hover:bg-hint-gold/20 ${className ?? ""}`}
+    >
+      <Users className="size-5" />
+      Retar a mis amigos
+    </Button>
   );
 }
 
