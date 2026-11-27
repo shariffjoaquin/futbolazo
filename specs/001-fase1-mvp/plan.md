@@ -13,7 +13,7 @@
 | Fuentes | `next/font/google`: Barlow Condensed (títulos y datos) + Inter (texto) | igual |
 | Datos de jugadores | Array estático en `data/players.ts` (10 jugadores ficticios) | **Supabase** (Postgres), cargado desde CSV |
 | Estado del usuario | `localStorage`: partida en curso + últimos 10 sorteados | sigue en `localStorage` (no hay login en fase 1) |
-| Tests | Vitest 3.2 (`npm test`) | igual |
+| Tests | Vitest 4.1 (`npm test`) | igual |
 | Lint | ESLint 9 + `eslint-config-next` (core-web-vitals + typescript) | igual |
 | Hosting | local (`npm run dev`) | **Vercel** |
 | Repo | sin control de versiones todavía | repo Git (GitHub) conectado a Vercel |
@@ -47,11 +47,15 @@ futbolazo/
 │   ├── crests.ts         # Escudos genéricos de los clubes (colores, sigla, diseño) y contraste
 │   ├── sounds.ts         # Qué sonido y qué vibración para cada evento (lógica pura) y definición de notas
 │   ├── audio.ts          # Motor Web Audio + vibración, ajuste de sonido en memoria (fuera de la lógica pura)
+│   ├── search.ts         # Búsqueda de jugadores sin tildes, con largo máximo (40)
+│   ├── securityHeaders.ts # CSP y cabeceras de seguridad (las aplica next.config.ts)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
-│   └── *.test.ts         # Tests de random, game, storage, daily, compare y share
+│   └── *.test.ts         # Tests de cada módulo; hostile.test.ts: URL y localStorage manipulados
 ├── specs/
 │   └── 001-fase1-mvp/    # Esta especificación
-├── next.config.ts        # cacheComponents, partialPrefetching, regla Turbopack para CSS
+├── .github/
+│   └── dependabot.yml    # Dependabot: npm, semanal
+├── next.config.ts        # cacheComponents, partialPrefetching, cabeceras de seguridad, sin X-Powered-By, regla Turbopack para CSS
 ├── vitest.config.ts      # alias "@" y patrón **/*.test.ts
 ├── eslint.config.mjs
 ├── tsconfig.json
@@ -156,12 +160,47 @@ futbolazo/
     - El ajuste vive en memoria (y se guarda en `localStorage`), así silenciar funciona aunque
       `localStorage` esté bloqueado. El botón de la cabecera se carga solo en el cliente, como la ayuda.
     - El movimiento reducido se lee con `useReducedMotion` de Motion en el momento del evento.
-16. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
+16. **Seguridad básica** (sin backend; ver spec §2.13):
+    - **Cabeceras en `next.config.ts`** (`headers()` para todas las rutas) y `poweredByHeader: false`.
+      La CSP se arma en `lib/securityHeaders.ts` (pura, con tests) para poder revisarla sin build.
+    - **CSP:** `default-src 'self'`; `script-src 'self' 'unsafe-inline'`; `style-src 'self'
+      'unsafe-inline'`; `img-src 'self'` (banderas y escudos son SVG inline, sin imágenes); `font-src 'self'`; `connect-src 'self'`;
+      `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`;
+      `upgrade-insecure-requests` (solo en producción).
+      - **Por qué `'unsafe-inline'` en scripts:** la página es estática (prerenderizada con
+        `cacheComponents`) y Next mete el payload de React en `<script>` inline. Los nonces exigen
+        render dinámico en cada visita y no funcionan con el prerender parcial; los hashes cambian
+        en cada build. Se acepta porque la página no muestra HTML hecho con datos del usuario (ver
+        auditoría de entradas), así que no hay por dónde inyectar un script; la CSP sigue
+        bloqueando scripts de otros dominios, `eval`, `<object>`, `<base>` y el iframe.
+      - **Por qué `'unsafe-inline'` en estilos:** el diálogo de Radix ("¿Cómo se juega?") bloquea el
+        scroll de fondo con un `<style>` que lleva el ancho de la barra de scroll de cada
+        dispositivo, así que un hash no sirve. Los `style=` de Motion se ponen desde JS y no lo
+        necesitan. Inyectar CSS no ejecuta código.
+      - **Confeti sin worker:** `canvas-confetti` crea por defecto un Web Worker desde un `blob:`;
+        se usa una instancia con `useWorker: false` para no abrir `worker-src blob:`.
+      - **`'unsafe-eval'` solo en `next dev`**: React lo usa para reconstruir trazas de error. En
+        producción no se usa.
+      - `next/font` sirve las fuentes desde el propio sitio (`/_next/static/media`), así que basta
+        `font-src 'self'`. Banderas y escudos son SVG inline; el audio se genera con Web Audio
+        (no necesita `media-src`).
+    - **Otras cabeceras:** `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+      strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, `Permissions-Policy: camera=(),
+      microphone=(), geolocation=()` (más pago, USB y sensores de movimiento, que el juego no usa) y
+      `Strict-Transport-Security: max-age=63072000; includeSubDomains` (sin `preload` hasta tener
+      dominio propio).
+    - **Entradas:** el código de reto se normaliza a `[0-9a-z]` y solo vale si coincide con un
+      jugador; lo leído de `localStorage` pasa por validadores que descartan lo que no encaja (la
+      fecha de la partida debe ser un día real del calendario); el buscador se recorta a 40
+      caracteres (`lib/search.ts`, pura). Todo se muestra como texto con React.
+    - **Dependencias:** Vitest 4 (cierra las vulnerabilidades de `tinypool` y `@vitest/mocker`) y
+      Dependabot semanal para npm.
+17. **Lógica pura separada de la UI.** `random`, `compare`, `share` y `daily` son funciones puras;
     `storage` y `game` se prueban con un `localStorage` simulado. `Game.tsx` solo orquesta estado y presentación.
-17. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
+18. **Modo diario conservado.** `lib/daily.ts` y `lib/daily.test.ts` se mantienen sin cambios para
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
-18. **Textos de la interfaz en español** y `lang="es"`.
-19. **Sin dependencias de runtime** aparte de Next y React.
+19. **Textos de la interfaz en español** y `lang="es"`.
+20. **Sin dependencias de runtime** aparte de Next y React.
 
 ## 4. Diseño visual (tanda 3)
 
@@ -237,8 +276,7 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
    jugadores desde la app. El sorteo sigue en el cliente y el estado sigue en `localStorage`.
 4. **Repo y Vercel**: inicializar Git, subir a GitHub, conectar a Vercel, configurar variables de
    entorno de Supabase (no subir `.env*`, ya está en `.gitignore`).
-5. **Vulnerabilidades de npm**: `npm audit` reporta hoy 3 (2 críticas, 1 moderada), todas por
-   `vitest` 3.x y sus dependencias (`tinypool`, `@vitest/mocker`). Son de desarrollo, no llegan al
-   sitio publicado. La solución propuesta es subir a `vitest` 4.x (cambio mayor) y volver a correr los tests.
+5. **Vulnerabilidades de npm**: resuelto con Vitest 4 (ver §3, decisión 16). Dependabot avisa de
+   las nuevas cada semana.
 6. **Modo diario (futuro, fuera de fase 1)**: exponer `lib/daily.ts` como un modo aparte, con su
    propio guardado y número de puzzle, y con `puzzles_diarios` en Supabase.

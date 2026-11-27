@@ -19,6 +19,7 @@ import { NIVEL_LABEL, type Nivel } from "@/lib/difficulty";
 import { bootGame, resumeOrStartNormal, startNewGame } from "@/lib/game";
 import { availableHints, describeHint, hintButtonState, pickHint, type HintType } from "@/lib/hints";
 import { computeScore } from "@/lib/score";
+import { MAX_QUERY_LENGTH, searchPlayers } from "@/lib/search";
 import { buildShareText, CHALLENGE_LINE, MAX_GUESSES } from "@/lib/share";
 import { feedbackPolicy, planGuess, planHint, type FeedbackPlan } from "@/lib/sounds";
 import { loadNivel, loadStats, recordScore, saveChallenge, saveGame, saveNivel, type SavedGame } from "@/lib/storage";
@@ -28,15 +29,15 @@ const INVALID_CHALLENGE = "Ese link de reto no es válido. Juegas una partida no
 /** URL del juego sin parámetros (sin `?reto=`). */
 const gameUrl = () => window.location.origin + window.location.pathname;
 
-const normalize = (s: string) =>
-  s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
-
 const CONFETTI_COLORS = ["#d91023", "#ffffff", "#2fbf5b", "#f5c518"];
+
+// Sin worker: el confeti por defecto crea un Web Worker desde un `blob:`, que la CSP bloquea.
+const launchConfetti = confetti.create(undefined, { resize: true, useWorker: false });
 
 function fireConfetti() {
   const base = { colors: CONFETTI_COLORS, disableForReducedMotion: true, ticks: 220, zIndex: 60 };
-  confetti({ ...base, particleCount: 90, spread: 70, startVelocity: 48, origin: { x: 0.15, y: 0.75 }, angle: 60 });
-  confetti({ ...base, particleCount: 90, spread: 70, startVelocity: 48, origin: { x: 0.85, y: 0.75 }, angle: 120 });
+  launchConfetti({ ...base, particleCount: 90, spread: 70, startVelocity: 48, origin: { x: 0.15, y: 0.75 }, angle: 60 });
+  launchConfetti({ ...base, particleCount: 90, spread: 70, startVelocity: 48, origin: { x: 0.85, y: 0.75 }, angle: 120 });
 }
 
 export default function Game() {
@@ -92,11 +93,7 @@ export default function Game() {
   const animateRows = !reduceMotion;
   const resultDelay = justEnded && animateRows ? REVEAL_SECONDS + 0.15 : 0;
 
-  const suggestions = useMemo(() => {
-    const q = normalize(query);
-    if (!q) return [];
-    return players.filter((p) => !guesses.includes(p.id) && normalize(p.nombre).includes(q));
-  }, [query, guesses]);
+  const suggestions = useMemo(() => searchPlayers(query, guesses, players), [query, guesses]);
 
   // Link de reto inválido: se juega normal, se limpia la URL y el aviso se va solo.
   useEffect(() => {
@@ -304,6 +301,7 @@ export default function Game() {
               onBlur={() => setOpen(false)}
               placeholder="Escribe el nombre de un jugador…"
               autoComplete="off"
+              maxLength={MAX_QUERY_LENGTH}
               className="h-full text-base placeholder:text-muted-foreground"
               groupClassName="h-14! rounded-2xl! border-2! border-white/15! bg-card/90! px-1 has-[[cmdk-input]:focus]:border-white/60!"
             />

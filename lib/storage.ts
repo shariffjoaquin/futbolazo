@@ -58,13 +58,21 @@ export function loadGame(): SavedGame | null {
   return parseGame(read(GAME_KEY));
 }
 
+/** `"YYYY-MM-DD"` de un día que existe en el calendario (sin "2026-02-30" ni "2026-13-01"). */
+function isDateKey(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+}
+
 /** Valida una partida guardada (normal o de reto). */
 function parseGame(value: unknown): SavedGame | null {
   const data = value as Partial<Record<keyof SavedGame, unknown>> | null;
   if (!data || typeof data !== "object") return null;
   const { targetId, fecha } = data;
   if (typeof targetId !== "string" || !getPlayerById(targetId)) return null;
-  if (typeof fecha !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return null;
+  if (!isDateKey(fecha)) return null;
   // Las partidas guardadas antes del botón de pista no traen `hints`: se cargan sin pistas.
   const hints = Array.isArray(data.hints)
     ? [...new Set(data.hints.filter((h): h is HintType => HINT_TYPES.includes(h as HintType)))].slice(0, MAX_HINTS)

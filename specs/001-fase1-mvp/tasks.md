@@ -145,10 +145,21 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
   - [ ] T30.5 Dominio (opcional)
 
 ## Seguridad y mantenimiento
-- [ ] T31 **Revisión de vulnerabilidades de npm**
-  - [ ] T31.1 Analizar `npm audit`: hoy 3 (2 críticas, 1 moderada), todas por `vitest` 3.x → `tinypool`, `@vitest/mocker`; solo de desarrollo
-  - [ ] T31.2 Subir a `vitest` 4.x (cambio mayor) y volver a correr los tests
-  - [ ] T31.3 Confirmar `npm audit` limpio o dejar justificado lo que quede
+- [x] T31 **Revisión de vulnerabilidades de npm**
+  - [x] T31.1 Analizar `npm audit`: había 3 (2 críticas, 1 moderada), todas por `vitest` 3.x → `tinypool`, `@vitest/mocker`; solo de desarrollo
+  - [x] T31.2 Subir a `vitest` 4.x (cambio mayor, aprobado) y volver a correr los tests
+  - [x] T31.3 Confirmar `npm audit` limpio: 0 vulnerabilidades (con y sin dependencias de desarrollo)
+  - [x] T31.4 `.github/dependabot.yml`: npm, semanal
+- [ ] T46 **Seguridad básica para publicar** (spec §2.13, plan decisión 16)
+  - [x] T46.1 `lib/securityHeaders.ts` (CSP y cabeceras, pura) con tests
+  - [x] T46.2 `next.config.ts`: `headers()` para todas las rutas y `poweredByHeader: false`
+  - [x] T46.3 Auditar entradas: `?reto=`, `localStorage` (partida, recientes, récords, nivel, sonido, retos, ayuda), buscador y texto de compartir; sin `dangerouslySetInnerHTML`, `eval` ni HTML con texto del usuario
+  - [x] T46.4 Validar que la fecha guardada sea un día real; buscador recortado a 40 caracteres (`lib/search.ts`)
+  - [x] T46.5 Tests de casos hostiles: JSON inválido, tipos incorrectos, cadenas enormes, `<script>` en el parámetro
+  - [x] T46.6 Secretos: sin `.env` ni claves en el repo ni en el historial; `.gitignore` los cubre
+  - [x] T46.7 Sin rutas API ni server actions expuestas
+  - [x] T46.8 Navegador a 360 y 1280 px con la CSP activa: juego completo y sin violaciones en consola
+  - [ ] T46.9 Revisar las cabeceras en el despliegue real de Vercel (pendiente de T30.3)
 
 ## Futuro (fuera de la fase 1)
 - [ ] F01 **Modo diario**: exponer `lib/daily.ts` como modo aparte, con su guardado, número de puzzle y `puzzles_diarios` en Supabase

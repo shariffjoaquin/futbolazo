@@ -24,6 +24,8 @@ npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2
 - `lib/sounds.ts` — qué sonido y vibración corresponde a cada evento (lógica pura)
 - `lib/audio.ts` — motor Web Audio y vibración; ajuste de sonido
 - `components/DifficultyPicker.tsx` — selector de nivel
+- `lib/search.ts` — búsqueda de jugadores sin tildes, con largo máximo
+- `lib/securityHeaders.ts` — CSP y cabeceras de seguridad que aplica `next.config.ts`
 - `lib/storage.ts` — partida en curso y recientes en localStorage
 - `lib/daily.ts` — fecha de Lima; modo diario (futuro, sin uso en la UI)
 - `specs/001-fase1-mvp/` — especificación de la fase 1

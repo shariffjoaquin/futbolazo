@@ -1,6 +1,6 @@
 # Spec 001 — Fase 1: MVP de Futbolazo
 
-**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 8 (escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
+**Estado:** en curso · **Fecha:** 2026-11-26 · **Revisión:** 9 (seguridad básica para publicar; la 8 agregó escudos genéricos de los clubes; la 7 agregó sonidos y vibración; la 6 agregó el reto a amigos por link; la 5 agregó el nivel de dificultad Fácil / Normal; la 4 agregó el puntaje y el texto de compartir con el jugador; la 3 agregó el botón de pista; la 2 cambió el puzzle diario por partidas ilimitadas al azar)
 
 ## 1. Qué es Futbolazo
 
@@ -351,6 +351,27 @@ Insignias **propias y genéricas**, no los escudos oficiales.
   - Cuando dos clubes comparten colores reales (Cienciano y Sport Huancayo, rojo y blanco), se
     invierte el orden o cambia el diseño para que no se confundan.
 
+### 2.13 Seguridad básica para publicar
+
+Futbolazo no tiene backend, cuentas ni datos personales, pero se publica en internet. Antes de
+hacerlo se cubre lo básico:
+
+- **Sin anuncios, analítica de terceros ni cookies.** La página solo carga recursos del propio sitio.
+- **Cabeceras de seguridad** en todas las respuestas: Content-Security-Policy estricta (solo el
+  propio sitio, sin `'unsafe-eval'` en producción, sin incrustarse en otros sitios), `nosniff`,
+  Referrer-Policy `strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, Permissions-Policy que
+  cierra cámara, micrófono y geolocalización, y Strict-Transport-Security. No se anuncia la
+  tecnología del servidor (`X-Powered-By`).
+- **Entradas tratadas como texto.** El parámetro `?reto=`, todo lo que se lee de `localStorage`, el
+  buscador y el texto de compartir nunca se interpretan como HTML ni como código: no se usa
+  `dangerouslySetInnerHTML`, `eval` ni HTML construido con texto del usuario.
+- **Datos manipulados no rompen la página.** JSON inválido, tipos incorrectos, fechas imposibles,
+  cadenas enormes o etiquetas `<script>` en el parámetro o en `localStorage` se ignoran: se juega
+  una partida normal (o se avisa que el reto no es válido).
+- **El buscador acepta como máximo 40 caracteres** (el nombre más largo de la lista cabe de sobra).
+- **Sin secretos en el repo**: ni claves ni `.env` versionados; `.gitignore` los cubre.
+- **Dependencias al día**: `npm audit` sin vulnerabilidades y Dependabot revisa npm cada semana.
+
 ## 3. Fuera de la fase 1
 
 - **Modo diario**: un mismo jugador para todos por fecha de Lima, con número de puzzle
@@ -454,6 +475,15 @@ Insignias **propias y genéricas**, no los escudos oficiales.
 **Persistencia**
 - [ ] CA-19: Con `localStorage` bloqueado o con datos corruptos, el juego carga y se puede jugar.
 - [ ] CA-20: Una partida guardada con un jugador que ya no existe se descarta y empieza una nueva.
+
+**Seguridad**
+- [ ] CA-68: Todas las respuestas llevan Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, X-Frame-Options, Permissions-Policy y Strict-Transport-Security, y no llevan `X-Powered-By`.
+- [ ] CA-69: Con la CSP activa el juego funciona completo (buscar, intentar, pista, sonidos, banderas, escudos, compartir, reto) y la consola no muestra violaciones de CSP.
+- [ ] CA-70: La CSP no permite `'unsafe-eval'` en producción, ni scripts, estilos, fuentes o conexiones de otros dominios, ni incrustar la página en otro sitio.
+- [ ] CA-71: `?reto=` con etiquetas `<script>`, cadenas enormes o caracteres raros abre una partida normal con el aviso de reto no válido, sin ejecutar nada.
+- [ ] CA-72: Valores manipulados en `localStorage` (JSON inválido, tipos incorrectos, fechas imposibles, cadenas enormes) no rompen la página: se ignoran y se juega normal.
+- [ ] CA-73: No hay claves ni `.env` en el repo ni en su historial; no hay rutas API ni server actions.
+- [ ] CA-74: `npm audit` reporta 0 vulnerabilidades y `.github/dependabot.yml` revisa npm cada semana.
 
 **Calidad y publicación**
 - [ ] CA-21: `npm test`, `npm run lint` y `npm run build` pasan sin errores.
