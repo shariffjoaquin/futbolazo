@@ -60,6 +60,12 @@ No se guarda en ningún servidor: el link lleva todo.
 
 ## 2. Modelo futuro en Supabase
 
+> **Primer paso (hecho, sin conectar el juego):** una sola tabla plana `public.players` con las
+> mismas columnas que el CSV (§3.1, incluidas las de fuente y verificación), definida en
+> `supabase/schema.sql` y cargada con `supabase/seed.sql` (spec §2.15, plan decisión 23).
+> RLS: `anon` solo lee filas con `elegible = true`. El modelo normalizado de abajo queda para
+> cuando haya más de una temporada.
+
 Objetivo: poder **actualizar la Liga 1 entre temporadas subiendo un CSV**, sin tocar código
 y manteniendo el historial.
 

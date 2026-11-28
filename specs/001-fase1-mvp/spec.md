@@ -439,6 +439,33 @@ hacerlo se cubre lo básico:
   `display: standalone`. No convierte el juego en una PWA con modo sin conexión (eso sigue fuera de la fase 1).
 - `theme-color` de la página: el color del fondo, `#050d09`.
 
+### 2.15 Jugadores en Supabase (preparación)
+
+Primer paso hacia Supabase: dejar la tabla y los datos listos **sin conectar el juego**. El juego
+sigue leyendo `data/players.ts` y no se pide ni se guarda ninguna clave (ni URL del proyecto, ni
+`anon key`, ni `service_role`).
+
+- **Dos archivos SQL en `supabase/`** que el dueño del producto pega a mano en el SQL Editor de Supabase:
+  - `schema.sql` (escrito a mano): crea la tabla `public.players`, sus restricciones y la seguridad.
+    Se puede volver a correr sin error.
+  - `seed.sql` (generado, no editar a mano): carga **todas** las filas del CSV, elegibles y no
+    elegibles. Se genera con `npm run db:seed-sql [ruta.csv]` (por defecto `data/raw/liga1-2026.csv`).
+- **Tabla `players`**: una fila por jugador con las mismas columnas que el CSV: `temporada`,
+  `jugador_id` (único), `nombre`, `club_id`, `club_nombre`, `nacionalidad`, `posicion`,
+  `fecha_nacimiento`, `dorsal`, `pie`, `elegible`, y las de fuente y verificación (`fuente`,
+  `verificado_en`, `verif_fecha`, `verif_dorsal`, `verif_pie`, `notas_revision`).
+- **La base rechaza valores inválidos**, con las mismas reglas que el importador: país de la lista
+  cerrada, posición `POR`/`DEF`/`MED`/`DEL`, pie `D`/`I`/`Ambos`, dorsal entero de 1 a 99, fechas
+  reales, textos obligatorios no vacíos y sin dos jugadores con el mismo dorsal en el mismo club y temporada.
+- **Seguridad (RLS activada)** con una sola política: el rol público (`anon`) solo puede **leer** las
+  filas con `elegible = true`. `anon` no puede insertar, modificar ni borrar.
+- **`seed.sql` se puede volver a correr**: en una transacción borra las filas de la temporada del CSV
+  y las vuelve a insertar; si algo falla no queda nada a medias.
+- **El generador valida igual que el importador** (todo o nada, mismos mensajes `Fila N (Nombre): …`)
+  y además que `verificado_en`, si viene, sea una fecha real. Con errores no escribe `seed.sql`.
+- **Textos bien escapados**: apóstrofes (`Jhamir D'Arrigo`), comillas, tildes y eñes llegan a la
+  base tal cual.
+
 ## 3. Fuera de la fase 1
 
 - **Modo diario**: un mismo jugador para todos por fecha de Lima, con número de puzzle
@@ -558,6 +585,15 @@ hacerlo se cubre lo básico:
 - [ ] CA-77: El manifiesto tiene nombre "Futbolazo", `display: standalone`, `theme_color` y `background_color` del fondo, y los íconos de 192 y 512 px (uno maskable).
 - [ ] CA-78: La página tiene `theme-color` con el color del fondo; el ícono y el manifiesto cargan sin errores de CSP.
 - [ ] CA-79: El selector de nivel dice "El jugador secreto es de Universitario, Alianza Lima, Sporting Cristal, Cienciano o Melgar." (Fácil) y "El jugador secreto puede ser de cualquier club." (Normal); la leyenda dice "el jugador secreto tiene más / menos".
+
+**Jugadores en Supabase (preparación)**
+- [ ] CA-80: `supabase/schema.sql` crea `public.players` con las columnas del CSV, `jugador_id` único, y se puede correr dos veces sin error.
+- [ ] CA-81: La tabla rechaza país fuera de la lista, posición o pie inválidos, dorsal fuera de 1–99, fechas imposibles, textos obligatorios vacíos y dorsal repetido en el mismo club y temporada.
+- [ ] CA-82: RLS está activada con una sola política: `anon` lee solo filas con `elegible = true` y no puede insertar, modificar ni borrar.
+- [ ] CA-83: `npm run db:seed-sql` genera `supabase/seed.sql` con una fila por cada fila del CSV (elegibles y no elegibles); con errores en el CSV no escribe nada.
+- [ ] CA-84: Nombres con apóstrofes, comillas, tildes o eñes se cargan sin romper el SQL y quedan iguales en la base.
+- [ ] CA-85: `seed.sql` se puede correr de nuevo y deja la misma cantidad de filas, sin duplicar.
+- [ ] CA-86: El juego no se conecta a Supabase y el repo no tiene claves de Supabase.
 
 **Calidad y publicación**
 - [ ] CA-21: `npm test`, `npm run lint` y `npm run build` pasan sin errores.

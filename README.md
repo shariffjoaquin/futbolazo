@@ -8,6 +8,7 @@ npm run dev      # http://localhost:3000
 npm test         # tests de Vitest
 npm run build
 npm run import:players   # CSV → data/players.ts (por defecto data/raw/liga1-2026.csv)
+npm run db:seed-sql      # CSV → supabase/seed.sql (todas las filas, para el SQL Editor de Supabase)
 npm run icons            # regenera los íconos desde lib/brandIcon.ts
 ```
 
@@ -25,6 +26,7 @@ npm run icons            # regenera los íconos desde lib/brandIcon.ts
 - `lib/sounds.ts` — qué sonido y vibración corresponde a cada evento (lógica pura)
 - `lib/audio.ts` — motor Web Audio y vibración; ajuste de sonido
 - `components/DifficultyPicker.tsx` — selector de nivel
+- `supabase/schema.sql` + `supabase/seed.sql` — tabla `players` con RLS (lectura pública solo de elegibles) y sus datos; `lib/seedSql.ts` genera el seed. El juego todavía no se conecta a Supabase
 - `lib/brandIcon.ts` + `scripts/generate-icons.tsx` — ícono propio (SVG); `npm run icons` regenera favicon, apple-icon e íconos del manifiesto
 - `lib/shareImage.ts` — tarjeta de resultado en PNG 1080 × 1920 (contenido y diseño puros + dibujo en Canvas)
 - `lib/search.ts` — búsqueda de jugadores sin tildes, con largo máximo

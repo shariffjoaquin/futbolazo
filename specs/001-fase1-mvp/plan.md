@@ -57,6 +57,13 @@ futbolazo/
 │   ├── securityHeaders.ts # CSP y cabeceras de seguridad (las aplica next.config.ts)
 │   ├── daily.ts          # Fecha de Lima (en uso) y modo diario (futuro, sin uso en la UI)
 │   └── *.test.ts         # Tests de cada módulo; hostile.test.ts: URL y localStorage manipulados
+├── scripts/
+│   ├── import-players.ts     # npm run import:players: CSV → data/players.ts
+│   ├── generate-seed-sql.ts  # npm run db:seed-sql: CSV → supabase/seed.sql
+│   └── generate-icons.tsx    # npm run icons
+├── supabase/
+│   ├── schema.sql        # Tabla players, restricciones y RLS (se pega en el SQL Editor)
+│   └── seed.sql          # Inserts de todas las filas del CSV (generado, no editar a mano)
 ├── specs/
 │   └── 001-fase1-mvp/    # Esta especificación
 ├── .github/
@@ -257,6 +264,34 @@ futbolazo/
     retomarlo como modo aparte; hoy la UI solo usa `getLimaDateKey`.
 21. **Textos de la interfaz en español** y `lang="es"`.
 22. **Sin dependencias de runtime** aparte de Next y React.
+23. **Supabase, primer paso: tabla plana `players`** (spec §2.15; sin dependencias nuevas, sin claves):
+    - **Una sola tabla con la forma del CSV**, en vez del modelo normalizado de `data-model.md` §2
+      (`clubes`, `jugadores`, `plantillas`). Así la carga es directa y se compara fila a fila con el
+      CSV. Separar en tablas queda para cuando haya varias temporadas.
+    - `jugador_id` es la clave primaria (único en toda la tabla). Con una segunda temporada habrá que
+      pasar a `primary key (temporada, jugador_id)` o al modelo normalizado.
+    - **Restricciones en la base** iguales a las del importador: `check` con la lista de `PAISES`,
+      `POSICIONES` y `PIES` de `lib/importPlayers.ts`, `dorsal between 1 and 99`, columnas `date`
+      (Postgres rechaza fechas imposibles), `btrim(...) <> ''` en textos obligatorios y
+      `unique (temporada, club_id, dorsal)`. Un test comprueba que las listas de `schema.sql` sean
+      las mismas que las del importador.
+    - **RLS**: `enable row level security` y una política `for select to anon using (elegible = true)`.
+      Además `revoke all` a `anon` y `authenticated` y `grant select` solo a `anon`, porque Supabase da
+      por defecto permisos de escritura a esos roles en `public` (RLS ya los bloquea; el `revoke` lo
+      deja explícito). El SQL Editor corre como `postgres`, que no pasa por RLS, por eso puede cargar el seed.
+    - **`schema.sql` idempotente**: `create table if not exists`, `drop policy if exists` antes de crearla.
+      Si cambian las restricciones de una tabla ya creada hay que borrarla o alterarla a mano.
+    - **Generador puro** en `lib/seedSql.ts` (`buildSeedSql`, `sqlLiteral`) y script
+      `scripts/generate-seed-sql.ts` (`npm run db:seed-sql`). Reusa `parseCsv` y `validateRows` del
+      importador (todo o nada) y valida además `verificado_en`. Escapa con comillas simples dobladas
+      (`'D''Arrigo'`), que es lo correcto con `standard_conforming_strings = on` (por defecto en
+      Supabase); las celdas opcionales vacías van como `null`.
+    - `seed.sql`: `begin;` → `delete from public.players where temporada in (...)` → un `insert` con
+      todas las filas → `commit;`. Repetible y sin quedar a medias.
+    - **Pruebas**: Vitest con texto (cantidad de filas igual al CSV, apóstrofes, tildes, `null`,
+      errores) y que el `seed.sql` del repo coincide con el que genera el CSV actual. Además se probó
+      una vez a mano en un Postgres local: `schema.sql` dos veces, `seed.sql` dos veces, inserts
+      inválidos rechazados y lectura con el rol `anon`.
 
 ## 4. Diseño visual (tanda 3)
 
@@ -328,8 +363,9 @@ Dirección: **móvil primero, "noche de estadio"**. Sin cambiar la lógica del j
    temporada vigente, todavía en `data/players.ts`, generado desde el CSV definido en `data-model.md`.
    Con más de 10 jugadores, la exclusión de recientes pasa a ser de 10 completos.
 2. **Diseño visual**: hecho en la tanda 3 (ver §4); falta revisión en dispositivos reales.
-3. **Supabase**: crear las tablas de `data-model.md`, script de importación del CSV y lectura de
-   jugadores desde la app. El sorteo sigue en el cliente y el estado sigue en `localStorage`.
+3. **Supabase**: primero la tabla `players` y los SQL para pegar a mano (decisión 23, hecho sin
+   conectar el juego). Después: crear el proyecto, correr los SQL, y que la app lea los jugadores
+   desde Supabase. El sorteo sigue en el cliente y el estado sigue en `localStorage`.
 4. **Repo y Vercel**: inicializar Git, subir a GitHub, conectar a Vercel, configurar variables de
    entorno de Supabase (no subir `.env*`, ya está en `.gitignore`).
 5. **Vulnerabilidades de npm**: resuelto con Vitest 4 (ver §3, decisión 16). Dependabot avisa de

@@ -130,11 +130,14 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[~]` hecho pero fuera de uso (funcio
 
 ## Base de datos
 - [ ] T29 **Base de datos Supabase**
-  - [ ] T29.1 Crear proyecto Supabase
-  - [ ] T29.2 Migraciones: `clubes`, `jugadores`, `plantillas`, vista `jugadores_temporada`
-  - [ ] T29.3 Políticas RLS (lectura pública, escritura solo `service_role`)
-  - [ ] T29.4 Script de importación del CSV con validación
-  - [ ] T29.5 La app lee los jugadores de la temporada vigente desde Supabase
+  - [ ] T29.1 Crear proyecto Supabase (lo hace el dueño del producto)
+  - [x] T29.2 `supabase/schema.sql`: tabla plana `players` con las columnas del CSV y restricciones (spec §2.15, plan decisión 23)
+  - [x] T29.3 RLS: una política de lectura `anon` solo `elegible = true`; sin escritura para `anon`
+  - [x] T29.4 `lib/seedSql.ts` + `npm run db:seed-sql` → `supabase/seed.sql` con todas las filas, validado como el importador
+  - [x] T29.6 Tests: filas = CSV, apóstrofes y tildes, `null`, errores, `seed.sql` al día, listas de `schema.sql` = importador
+  - [x] T29.7 Probado en Postgres local: schema y seed dos veces, inserts inválidos rechazados, lectura como `anon`
+  - [ ] T29.8 Pegar `schema.sql` y `seed.sql` en el SQL Editor de Supabase (lo hace el dueño del producto)
+  - [ ] T29.5 La app lee los jugadores de la temporada vigente desde Supabase (pendiente; sin claves todavía)
 
 ## Publicación
 - [ ] T30 **Repo y despliegue en Vercel**

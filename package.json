@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "import:players": "tsx scripts/import-players.ts",
+    "db:seed-sql": "tsx scripts/generate-seed-sql.ts",
     "icons": "tsx scripts/generate-icons.tsx"
   },
   "dependencies": {
